@@ -54,6 +54,46 @@ public class ChatConfirmationListener {
                 LOGGER.debug("Pattern not found in game message: {}", content);
             }
         });
+        ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
+            String content = message.getString().trim();
+
+            // If the mod triggered "/channels list", parse the list *here* before hiding it from chat.
+            if (StoneworksChatClient.modTriggeredChannelsList) {
+                // Start of list
+                if (content.equals("Channel list:")) {
+                    collectingChannels = true;
+                    channelStatuses.clear();
+                    LOGGER.info("[HIDE] Started collecting channel list");
+                    return false; // hide line
+                }
+
+                // Lines containing status information
+                if (collectingChannels && (content.endsWith(" Status: Receiving") || content.endsWith(" Status: Muted") || content.endsWith(" Status: Transmitting"))) {
+                    channelStatuses.add(content);
+                    // Typical list length is 4 but be safe – process once we have all configured channels or 8 lines
+                    if (channelStatuses.size() >= 4 && channelStatuses.size() >= StoneworksChatClient.channels.size()) {
+                        collectingChannels = false;
+                        processChannelList();
+                    }
+                    return false; // hide line
+                }
+
+                // Any other non-empty line ends the list
+                if (collectingChannels && !content.isEmpty()) {
+                    collectingChannels = false;
+                    processChannelList();
+                    return false;
+                }
+
+                // Fall-through: hide all list-related lines while flag is set
+                if (collectingChannels) {
+                    return false;
+                }
+            }
+
+            // For all other messages, allow them to display.
+            return true;
+        });
     }
 
     private static void processChannelList() {
@@ -83,5 +123,7 @@ public class ChatConfirmationListener {
         } else {
             LOGGER.info("Channel list confirms current: {}", newChannel);
         }
+        StoneworksChatClient.modTriggeredChannelsList = false;
+        channelStatuses.clear();
     }
 } 

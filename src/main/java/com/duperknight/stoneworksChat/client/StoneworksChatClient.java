@@ -21,6 +21,7 @@ public class StoneworksChatClient implements ClientModInitializer {
 
     private static net.minecraft.client.gui.screen.Screen lastScreen = null;
     private static boolean sentChannelsList = false;
+    public static boolean modTriggeredChannelsList = false;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoneworksChatClient.class);
 
@@ -34,6 +35,7 @@ public class StoneworksChatClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             net.minecraft.client.gui.screen.Screen current = client.currentScreen;
             if (lastScreen instanceof GenericContainerScreen && lastScreen.getTitle().getString().equals("Channels") && current == null && !sentChannelsList) {
+                modTriggeredChannelsList = true;
                 client.player.networkHandler.sendChatCommand("channels list");
                 LOGGER.info("Detected Channels GUI close - sent /channels list");
                 sentChannelsList = true;
