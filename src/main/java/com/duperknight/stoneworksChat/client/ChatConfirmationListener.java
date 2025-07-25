@@ -26,13 +26,13 @@ public class ChatConfirmationListener {
             }
             if (collectingChannels && (content.endsWith(" Status: Receiving") || content.endsWith(" Status: Muted") || content.endsWith(" Status: Transmitting"))) {
                 channelStatuses.add(content);
-                if (channelStatuses.size() >= 4) { // typical list length
+                if (content.endsWith(" Status: Transmitting")) {
                     collectingChannels = false;
                     processChannelList();
                 }
                 return;
             }
-            if (collectingChannels && !content.isEmpty()) { // non-empty non-status ends list
+            if (collectingChannels && !content.isEmpty()) {
                 collectingChannels = false;
                 processChannelList();
                 return;
@@ -57,41 +57,28 @@ public class ChatConfirmationListener {
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
             String content = message.getString().trim();
 
-            // If the mod triggered "/channels list", parse the list *here* before hiding it from chat.
-            if (StoneworksChatClient.modTriggeredChannelsList) {
-                // Start of list
-                if (content.equals("Channel list:")) {
-                    collectingChannels = true;
-                    channelStatuses.clear();
-                    LOGGER.info("[HIDE] Started collecting channel list");
-                    return false; // hide line
-                }
-
-                // Lines containing status information
-                if (collectingChannels && (content.endsWith(" Status: Receiving") || content.endsWith(" Status: Muted") || content.endsWith(" Status: Transmitting"))) {
-                    channelStatuses.add(content);
-                    // Typical list length is 4 but be safe – process once we have all configured channels or 8 lines
-                    if (channelStatuses.size() >= 4 && channelStatuses.size() >= StoneworksChatClient.channels.size()) {
-                        collectingChannels = false;
-                        processChannelList();
-                    }
-                    return false; // hide line
-                }
-
-                // Any other non-empty line ends the list
-                if (collectingChannels && !content.isEmpty()) {
-                    collectingChannels = false;
-                    processChannelList();
-                    return false;
-                }
-
-                // Fall-through: hide all list-related lines while flag is set
-                if (collectingChannels) {
-                    return false;
-                }
+            // Always hide channel list messages, regardless of who triggered them
+            if (content.equals("Channel list:")) {
+                collectingChannels = true;
+                channelStatuses.clear();
+                return false; // hide line
             }
 
-            // For all other messages, allow them to display.
+            // While collecting, hide all status lines and process if needed
+            if (collectingChannels) {
+                if (content.endsWith(" Status: Receiving") || content.endsWith(" Status: Muted") || content.endsWith(" Status: Transmitting")) {
+                    channelStatuses.add(content);
+                    if (content.endsWith(" Status: Transmitting")) {
+                        processChannelList();
+                    }
+                    return false; // hide all status lines
+                }
+                // End of channel list: hide this line, then stop collecting
+                collectingChannels = false;
+                channelStatuses.clear();
+                return false;
+            }
+
             return true;
         });
     }
@@ -99,6 +86,13 @@ public class ChatConfirmationListener {
     private static void processChannelList() {
         LOGGER.info("Processing list of {} statuses", channelStatuses.size());
         String transmitting = null;
+        
+        // Log all channel statuses for debugging
+        for (String status : channelStatuses) {
+            LOGGER.info("Channel status: {}", status);
+        }
+        
+        // Look for any channel with "Transmitting" status
         for (String status : channelStatuses) {
             String[] parts = status.split(" Status: ");
             if (parts.length == 2 && parts[1].equals("Transmitting")) {
@@ -113,8 +107,11 @@ public class ChatConfirmationListener {
                 }
             }
         }
+        
+        // If no channel is transmitting, we're on public channel
         String newChannel = (transmitting != null) ? transmitting : "public";
-        LOGGER.info("Selected newChannel: {}", newChannel);
+        LOGGER.info("Selected newChannel: {} (transmitting channel found: {})", newChannel, transmitting != null);
+        
         if (!newChannel.equals(StoneworksChatClient.currentChannel)) {
             StoneworksChatClient.currentChannel = newChannel;
             StoneworksChatClient.pendingChannel = null;
@@ -123,7 +120,10 @@ public class ChatConfirmationListener {
         } else {
             LOGGER.info("Channel list confirms current: {}", newChannel);
         }
-        StoneworksChatClient.modTriggeredChannelsList = false;
+        // Only reset the flag if it was set by the mod
+        if (StoneworksChatClient.modTriggeredChannelsList) {
+            StoneworksChatClient.modTriggeredChannelsList = false;
+        }
         channelStatuses.clear();
     }
-} 
+}

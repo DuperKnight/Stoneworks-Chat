@@ -4,11 +4,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HudOverlayRenderer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoneworksChatClient.MOD_ID);
     public static void register() {
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             Map<String, Object> channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
@@ -30,6 +27,8 @@ public class HudOverlayRenderer {
             case "white" -> 0xFFFFFF;
             case "light_red" -> 0xFF5555;
             case "cyan" -> 0x00FFFF;
+            case "red" -> 0xFF0000;
+            case "yellow" -> 0xFFFF00;
             default -> 0xFFFFFF;
         };
     }

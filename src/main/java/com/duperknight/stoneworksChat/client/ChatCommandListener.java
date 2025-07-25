@@ -23,16 +23,24 @@ public class ChatCommandListener {
                         return true;
                     }
                 }
-                return true; // Allow sending
+                // If not found, fall through to alias check
             }
 
-            // Check aliases (without leading slash)
             for (Map.Entry<String, Map<String, Object>> entry : StoneworksChatClient.channels.entrySet()) {
                 String key = entry.getKey();
                 Object aliasesObj = entry.getValue().get("aliases");
                 if (aliasesObj instanceof List<?>) {
-                    List<String> aliases = (List<String>) aliasesObj;
-                    for (String alias : aliases) {
+                    for (Object aliasObj : (List<?>) aliasesObj) {
+                        String alias = aliasObj.toString();
+                        String aliasNoSlash = alias.startsWith("/") ? alias.substring(1) : alias;
+                        if (lowered.equals(aliasNoSlash) || lowered.startsWith(aliasNoSlash + " ")) {
+                            StoneworksChatClient.pendingChannel = key;
+                            LOGGER.info("Detected alias {}, set pending: {}", alias, StoneworksChatClient.pendingChannel);
+                            return true;
+                        }
+                    }
+                } else if (aliasesObj instanceof String[]) {
+                    for (String alias : (String[]) aliasesObj) {
                         String aliasNoSlash = alias.startsWith("/") ? alias.substring(1) : alias;
                         if (lowered.equals(aliasNoSlash) || lowered.startsWith(aliasNoSlash + " ")) {
                             StoneworksChatClient.pendingChannel = key;

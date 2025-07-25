@@ -46,7 +46,7 @@ public class ChatConfig {
             localChat.put("uiName", "Local Chat");
 
             Map<String, Object> rpChat = new HashMap<>();
-            rpChat.put("display", "Role-play");
+            rpChat.put("display", "Roleplay");
             rpChat.put("color", "light_red");
             rpChat.put("aliases", new String[]{"/rpc"});
             rpChat.put("uiName", "RP Chat");
@@ -57,10 +57,24 @@ public class ChatConfig {
             tradeChat.put("aliases", new String[]{"/tradechat", "/tc"});
             tradeChat.put("uiName", "Trade Chat");
 
+            Map<String, Object> staffChat = new HashMap<>();
+            staffChat.put("display", "Staff");
+            staffChat.put("color", "yellow");
+            staffChat.put("aliases", new String[]{"/staffc"});
+            staffChat.put("uiName", "Staff Chat");
+
+            Map<String, Object> adminChat = new HashMap<>();
+            adminChat.put("display", "Admin");
+            adminChat.put("color", "red");
+            adminChat.put("aliases", new String[]{"/adminc"});
+            adminChat.put("uiName", "Admin Chat");
+
             StoneworksChatClient.channels.put("public", publicChat);
             StoneworksChatClient.channels.put("LocalChat", localChat);
             StoneworksChatClient.channels.put("RPChat", rpChat);
             StoneworksChatClient.channels.put("TradeChat", tradeChat);
+            StoneworksChatClient.channels.put("StaffChat2", staffChat);
+            StoneworksChatClient.channels.put("AdminChat", adminChat);
 
             save();
             LOGGER.info("Created default config");
