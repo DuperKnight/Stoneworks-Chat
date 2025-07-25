@@ -48,7 +48,22 @@ public class ChatConfirmationListener {
                     ChatConfig.save();
                     LOGGER.info("Updated currentChannel to: {}", StoneworksChatClient.currentChannel);
                 } else {
-                    LOGGER.warn("Confirmation mismatch or no pending: {} (pending: {})", confirmedChannel, StoneworksChatClient.pendingChannel);
+                    // Try to match by display name if direct match fails
+                    boolean matchedByDisplay = false;
+                    for (String key : StoneworksChatClient.channels.keySet()) {
+                        Object displayObj = StoneworksChatClient.channels.get(key).get("display");
+                        if (displayObj != null && displayObj.toString().equalsIgnoreCase(confirmedChannel)) {
+                            StoneworksChatClient.currentChannel = key;
+                            StoneworksChatClient.pendingChannel = null;
+                            ChatConfig.save();
+                            LOGGER.info("Updated currentChannel by display name: {} (key: {})", confirmedChannel, key);
+                            matchedByDisplay = true;
+                            break;
+                        }
+                    }
+                    if (!matchedByDisplay) {
+                        LOGGER.warn("Confirmation mismatch or no pending: {} (pending: {})", confirmedChannel, StoneworksChatClient.pendingChannel);
+                    }
                 }
             } else {
                 LOGGER.debug("Pattern not found in game message: {}", content);
