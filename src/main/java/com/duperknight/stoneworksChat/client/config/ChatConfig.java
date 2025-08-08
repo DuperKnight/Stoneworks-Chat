@@ -43,6 +43,38 @@ public class ChatConfig {
                     }
                 }
                 StoneworksChatClient.channels = loadedChannels;
+
+                // HUD position and alignment
+                Object hudX = config.get("hudX");
+                Object hudY = config.get("hudY");
+                Object align = config.get("textAlign");
+                Object fx = config.get("hudXFrac");
+                Object fy = config.get("hudYFrac");
+                Object anchorX = config.get("hudAnchorX");
+                Object anchorY = config.get("hudAnchorY");
+                Object offX = config.get("hudOffsetX");
+                Object offY = config.get("hudOffsetY");
+                if (hudX instanceof Number nX) StoneworksChatClient.hudPosX = nX.intValue();
+                if (hudY instanceof Number nY) StoneworksChatClient.hudPosY = nY.intValue();
+                if (fx instanceof Number nx) StoneworksChatClient.hudPosXFrac = nx.floatValue();
+                if (fy instanceof Number ny) StoneworksChatClient.hudPosYFrac = ny.floatValue();
+                if (anchorX instanceof String ax) {
+                    try { StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.valueOf(ax); } catch (Exception ignored) {}
+                }
+                if (anchorY instanceof String ay) {
+                    try { StoneworksChatClient.hudAnchorY = StoneworksChatClient.AnchorY.valueOf(ay); } catch (Exception ignored) {}
+                }
+                if (offX instanceof Number ox) StoneworksChatClient.hudOffsetX = ox.intValue();
+                if (offY instanceof Number oy) StoneworksChatClient.hudOffsetY = oy.intValue();
+                if (align instanceof String s) {
+                    if ("rtl".equalsIgnoreCase(s)) {
+                        StoneworksChatClient.hudTextAlign = StoneworksChatClient.TextAlign.RIGHT_TO_LEFT;
+                    } else if ("center".equalsIgnoreCase(s)) {
+                        StoneworksChatClient.hudTextAlign = StoneworksChatClient.TextAlign.CENTER;
+                    } else {
+                        StoneworksChatClient.hudTextAlign = StoneworksChatClient.TextAlign.LEFT_TO_RIGHT;
+                    }
+                }
         LOGGER.info("Loaded config: currentChannel = {}", StoneworksChatClient.currentChannel);
             } catch (IOException e) {
                 LOGGER.error("Failed to load config {}", CONFIG_FILE.getAbsolutePath(), e);
@@ -57,6 +89,24 @@ public class ChatConfig {
         Map<String, Object> config = new HashMap<>();
         config.put("currentChannel", StoneworksChatClient.currentChannel);
         config.put("channels", StoneworksChatClient.channels);
+        config.put("hudX", StoneworksChatClient.hudPosX);
+        config.put("hudY", StoneworksChatClient.hudPosY);
+    String align = switch (StoneworksChatClient.hudTextAlign) {
+            case LEFT_TO_RIGHT -> "ltr";
+            case CENTER -> "center";
+            case RIGHT_TO_LEFT -> "rtl";
+        };
+        config.put("textAlign", align);
+    if (StoneworksChatClient.hudPosXFrac >= 0f) config.put("hudXFrac", StoneworksChatClient.hudPosXFrac);
+    if (StoneworksChatClient.hudPosYFrac >= 0f) config.put("hudYFrac", StoneworksChatClient.hudPosYFrac);
+        if (StoneworksChatClient.hudAnchorX != null) {
+            config.put("hudAnchorX", StoneworksChatClient.hudAnchorX.name());
+        }
+        if (StoneworksChatClient.hudAnchorY != null) {
+            config.put("hudAnchorY", StoneworksChatClient.hudAnchorY.name());
+        }
+    config.put("hudOffsetX", StoneworksChatClient.hudOffsetX);
+    config.put("hudOffsetY", StoneworksChatClient.hudOffsetY);
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(config, writer);
@@ -67,21 +117,20 @@ public class ChatConfig {
     }
 
     private static void ensureDefaultChannels() {
-        addDefaultChannel("public", "Global", "white", new String[]{"/g", "/global"}, "Global Chat");
-        addDefaultChannel("LocalChat", "Local", "green", new String[]{"/l", "/local"}, "Local Chat");
-        addDefaultChannel("TradeChat", "Trade", "cyan", new String[]{"/tradechat", "/tc"}, "Trade Chat");
-        addDefaultChannel("RPChat", "Roleplay", "light_red", new String[]{"/rpc"}, "RP Chat");
-        addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"}, "Staff Chat");
-        addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"}, "Admin Chat");
+        addDefaultChannel("public", "Global", "white", new String[]{"/g", "/global"});
+        addDefaultChannel("LocalChat", "Local", "green", new String[]{"/l", "/local"});
+        addDefaultChannel("TradeChat", "Trade", "cyan", new String[]{"/tradechat", "/tc"});
+        addDefaultChannel("RPChat", "Roleplay", "light_red", new String[]{"/rpc"});
+        //addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"});
+        //addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"});
     }
 
-    private static void addDefaultChannel(String key, String display, String color, String[] aliases, String uiName) {
+    private static void addDefaultChannel(String key, String display, String color, String[] aliases) {
         if (!StoneworksChatClient.channels.containsKey(key)) {
             Map<String, Object> map = new HashMap<>();
             map.put("display", display);
             map.put("color", color);
             map.put("aliases", aliases);
-            map.put("uiName", uiName);
             StoneworksChatClient.channels.put(key, map);
         }
     }

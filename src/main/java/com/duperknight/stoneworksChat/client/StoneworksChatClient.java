@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.option.KeyBinding;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +32,26 @@ public class StoneworksChatClient implements ClientModInitializer {
     private static boolean guiTriggeredUpdate = false;
     private static boolean delayedCommandScheduled = false;
 
+    
+    public enum TextAlign { LEFT_TO_RIGHT, CENTER, RIGHT_TO_LEFT }
+    public static int hudPosX = 10;
+    public static int hudPosY = 10;
+    public static TextAlign hudTextAlign = TextAlign.LEFT_TO_RIGHT;
+    
+    public static float hudPosXFrac = -1f;
+    public static float hudPosYFrac = -1f;
+
+    
+    public enum AnchorX { LEFT, CENTER, RIGHT }
+    public static AnchorX hudAnchorX = AnchorX.LEFT;
+    public enum AnchorY { TOP, CENTER, BOTTOM }
+    public static AnchorY hudAnchorY = AnchorY.TOP;
+    public static int hudOffsetX = -1; 
+    public static int hudOffsetY = -1; 
+
+    
+    private static KeyBinding OPEN_HUD_CONFIG_KEY;
+
     @Override
     public void onInitializeClient() {
         ChatConfig.load();
@@ -37,8 +60,23 @@ public class StoneworksChatClient implements ClientModInitializer {
         ChannelGuiListener.register();
         HudOverlayRenderer.register();
 
+        
+        OPEN_HUD_CONFIG_KEY = KeyBindingHelper.registerKeyBinding(
+            new KeyBinding(
+                "key.stoneworks_chat.open_hud_config",
+                GLFW.GLFW_KEY_H,
+                "key.categories.stoneworks_chat"
+            )
+        );
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ChatConfirmationListener.checkTimeout();
+
+            
+            while (OPEN_HUD_CONFIG_KEY != null && OPEN_HUD_CONFIG_KEY.wasPressed()) {
+                var parent = client.currentScreen;
+                client.setScreen(new HudConfigScreen(parent));
+            }
 
             net.minecraft.client.gui.screen.Screen current = client.currentScreen;
             boolean isChannelGui = current instanceof GenericContainerScreen &&
