@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "stoneworks-chat",
+  "version": "${mod_version}+${minecraft_version}",
+  "name": "Stoneworks HUD Chat",
+  "description": "An unofficial mod that displays your current selected chat in your HUD! (works with other RedisChat servers too)",
+  "authors": ["DuperKnight"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/stoneworks-chat/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.duperknight.stoneworksChat.client.StoneworksChatClient"
+    ],
+    "main": [
+      "com.duperknight.stoneworksChat.StoneworksChat"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "[1.21.4,1.21.6)"
+  }
+}
