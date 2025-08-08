@@ -71,8 +71,8 @@ public class ChatConfig {
         addDefaultChannel("LocalChat", "Local", "green", new String[]{"/l", "/local"}, "Local Chat");
         addDefaultChannel("TradeChat", "Trade", "cyan", new String[]{"/tradechat", "/tc"}, "Trade Chat");
         addDefaultChannel("RPChat", "Roleplay", "light_red", new String[]{"/rpc"}, "RP Chat");
-        //addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"}, "Staff Chat");
-        //addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"}, "Admin Chat");
+        addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"}, "Staff Chat");
+        addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"}, "Admin Chat");
     }
 
     private static void addDefaultChannel(String key, String display, String color, String[] aliases, String uiName) {
