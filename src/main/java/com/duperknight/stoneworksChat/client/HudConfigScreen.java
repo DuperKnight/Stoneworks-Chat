@@ -49,7 +49,7 @@ public class HudConfigScreen extends Screen {
             int paddingY = 3;
             int textW = this.textRenderer.getWidth(previewText);
             int textH = this.textRenderer.fontHeight;
-            int bgW = textW + paddingX * 2 + 1;
+            int bgW = textW + paddingX * 2;
             int bgH = textH + paddingY * 2;
             this.previewW = bgW;
             this.previewH = bgH;
@@ -139,19 +139,24 @@ public class HudConfigScreen extends Screen {
     }
 
     private void toggleAlign() {
+        // Preserve the current box's leftX across alignment toggles to avoid 1px jumps on odd widths
+        int boxW = previewW;
+        boolean wasRtl = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
+        boolean wasCenter = (currentAlign == StoneworksChatClient.TextAlign.CENTER);
+        int leftXBefore = wasRtl ? (currentX - boxW) : (wasCenter ? (currentX - boxW / 2) : currentX);
+
+        // Advance alignment
         switch (currentAlign) {
-            case LEFT_TO_RIGHT -> {
-                currentAlign = StoneworksChatClient.TextAlign.CENTER;
-                currentX = currentX + previewW / 2;
-            }
-            case CENTER -> {
-                currentAlign = StoneworksChatClient.TextAlign.RIGHT_TO_LEFT;
-                currentX = currentX + previewW / 2;
-            }
-            case RIGHT_TO_LEFT -> {
-                currentAlign = StoneworksChatClient.TextAlign.LEFT_TO_RIGHT;
-                currentX = currentX - previewW;
-            }
+            case LEFT_TO_RIGHT -> currentAlign = StoneworksChatClient.TextAlign.CENTER;
+            case CENTER -> currentAlign = StoneworksChatClient.TextAlign.RIGHT_TO_LEFT;
+            case RIGHT_TO_LEFT -> currentAlign = StoneworksChatClient.TextAlign.LEFT_TO_RIGHT;
+        }
+
+        // Recompute currentX for new alignment so leftX remains identical
+        switch (currentAlign) {
+            case LEFT_TO_RIGHT -> currentX = leftXBefore;
+            case CENTER -> currentX = leftXBefore + (boxW / 2); // use integer half to preserve exact leftX
+            case RIGHT_TO_LEFT -> currentX = leftXBefore + boxW;
         }
     }
 
@@ -185,7 +190,7 @@ public class HudConfigScreen extends Screen {
             int paddingY = 3;
             int textW = tr.getWidth(text);
             int textH = tr.fontHeight;
-            int bgW = textW + paddingX * 2 + 1;
+            int bgW = textW + paddingX * 2;
             int bgH = textH + paddingY * 2;
 
             previewW = bgW;
@@ -253,7 +258,7 @@ public class HudConfigScreen extends Screen {
 
             int textX;
             if (rtl) {
-                textX = leftX + bgW - paddingX - textW - 1;
+                textX = leftX + bgW - paddingX - textW;
             } else if (centerAlign) {
                 textX = leftX + Math.max(0, (bgW - textW) / 2);
             } else {

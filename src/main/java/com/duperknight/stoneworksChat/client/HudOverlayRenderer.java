@@ -17,7 +17,7 @@ public class HudOverlayRenderer {
             if (channelInfo != null) {
                 String display = (String) channelInfo.get("display");
                 String color = (String) channelInfo.get("color");
-                String text = "Chat: " + display;
+                Text text = Text.translatable("stoneworks_chat.chat_prefix", (display != null ? display : ""));
 
                 int screenW = drawContext.getScaledWindowWidth();
                 int screenH = drawContext.getScaledWindowHeight();
@@ -30,7 +30,7 @@ public class HudOverlayRenderer {
                 int paddingY = 3;
                 int textW = tr.getWidth(text);
                 int textH = tr.fontHeight;
-                int bgW = textW + paddingX * 2 + 1;
+                int bgW = textW + paddingX * 2;
                 int bgH = textH + paddingY * 2;
 
                 boolean rtl = (StoneworksChatClient.hudTextAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
@@ -67,14 +67,14 @@ public class HudOverlayRenderer {
 
                 int textX;
                 if (rtl) {
-                    textX = leftX + bgW - paddingX - textW - 1;
+                    textX = leftX + bgW - paddingX - textW;
                 } else if (center) {
                     textX = leftX + Math.max(0, (bgW - textW) / 2);
                 } else {
                     textX = leftX + paddingX;
                 }
                 int textY = y + Math.round((bgH - textH) / 2f) + 1;
-                drawContext.drawText(tr, Text.literal(text), textX, textY, colorCode, true);
+                drawContext.drawText(tr, text, textX, textY, colorCode, true);
             }
         });
     }
