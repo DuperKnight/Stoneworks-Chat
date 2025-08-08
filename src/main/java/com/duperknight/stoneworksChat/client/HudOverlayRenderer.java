@@ -23,13 +23,13 @@ public class HudOverlayRenderer {
                 int paddingY = 3;
                 int textW = tr.getWidth(text);
                 int textH = tr.fontHeight;
-                int bgW = textW + paddingX * 2;
+                int bgW = textW + paddingX * 2 + 1;
                 int bgH = textH + paddingY * 2;
 
                 drawContext.fill(x, y, x + bgW, y + bgH, 0x80000000);
 
-                int textX = x + ((bgW - textW) / 2) + 1;
-                int textY = y + ((bgH - textH) / 2) + 1;
+                int textX = x + Math.round((bgW - textW) / 2f);
+                int textY = y + Math.round((bgH - textH) / 2f) + 1;
                 drawContext.drawText(tr, Text.literal(text), textX, textY, colorCode, true);
             }
         });
@@ -46,4 +46,4 @@ public class HudOverlayRenderer {
             default -> 0xFFFFFF;
         };
     }
-} 
+}
