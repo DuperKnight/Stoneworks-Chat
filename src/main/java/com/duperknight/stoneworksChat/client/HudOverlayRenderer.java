@@ -13,6 +13,9 @@ public class HudOverlayRenderer {
             if (mc != null && mc.currentScreen instanceof HudConfigScreen) {
                 return;
             }
+            if (!StoneworksChatClient.hudVisible) {
+                return; // HUD hidden
+            }
             Map<String, Object> channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
             if (channelInfo != null) {
                 String display = (String) channelInfo.get("display");
@@ -39,11 +42,23 @@ public class HudOverlayRenderer {
                 boolean useAnchorX = (StoneworksChatClient.hudAnchorX == StoneworksChatClient.AnchorX.CENTER)
                     || (StoneworksChatClient.hudOffsetX >= 0);
                 if (useAnchorX) {
+                    // Compute an anchor coordinate (a vertical guide line), then place box relative to it by alignment
+                    int anchorCoordX;
                     switch (StoneworksChatClient.hudAnchorX) {
-                        case RIGHT: leftX = screenW - StoneworksChatClient.hudOffsetX - bgW; break;
-                        case CENTER: leftX = (screenW / 2) - (bgW / 2) + StoneworksChatClient.hudOffsetX; break;
-                        case LEFT: default: leftX = StoneworksChatClient.hudOffsetX; break;
+                        case RIGHT:
+                            anchorCoordX = screenW - StoneworksChatClient.hudOffsetX;
+                            break;
+                        case CENTER:
+                            anchorCoordX = (screenW / 2) + StoneworksChatClient.hudOffsetX;
+                            break;
+                        case LEFT:
+                        default:
+                            anchorCoordX = StoneworksChatClient.hudOffsetX;
+                            break;
                     }
+                    leftX = rtl ? (anchorCoordX - bgW)
+                                 : (center ? (anchorCoordX - (bgW / 2))
+                                           : anchorCoordX);
                 } else {
                     if (StoneworksChatClient.hudPosXFrac >= 0f) {
                         xAnchor = Math.round(StoneworksChatClient.hudPosXFrac * screenW);

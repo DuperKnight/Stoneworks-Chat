@@ -1,11 +1,14 @@
 {
     "key.categories.stoneworks_chat": "Stoneworks HUD Chat",
     "key.stoneworks_chat.open_hud_config":  "Open HUD Configuration",
+    "key.stoneworks_chat.toggle_hud_visibility": "Toggle HUD Visibility",
     "screen.stoneworks_chat.hud_config.title": "Chat HUD Config",
     "screen.stoneworks_chat.hud_config.alignment": "Alignment: %s",
     "screen.stoneworks_chat.hud_config.align.left_to_right": "Left-to-Right",
     "screen.stoneworks_chat.hud_config.align.center": "Centered",
     "screen.stoneworks_chat.hud_config.align.right_to_left": "Right-to-Left",
     "screen.stoneworks_chat.hud_config.drag_help": "Drag the box to move the Chat HUD",
+    "screen.stoneworks_chat.hud_config.visible": "HUD: Visible (right-click to toggle)",
+    "screen.stoneworks_chat.hud_config.hidden": "HUD: Hidden (right-click to toggle)",
     "stoneworks_chat.chat_prefix": "Chat: %s"
 }

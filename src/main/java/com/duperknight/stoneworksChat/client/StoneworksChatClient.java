@@ -48,9 +48,11 @@ public class StoneworksChatClient implements ClientModInitializer {
     public static AnchorY hudAnchorY = AnchorY.TOP;
     public static int hudOffsetX = -1; 
     public static int hudOffsetY = -1; 
+    public static boolean hudVisible = true;
 
     
     private static KeyBinding OPEN_HUD_CONFIG_KEY;
+    private static KeyBinding TOGGLE_HUD_VISIBILITY_KEY;
 
     @Override
     public void onInitializeClient() {
@@ -69,6 +71,14 @@ public class StoneworksChatClient implements ClientModInitializer {
             )
         );
 
+        TOGGLE_HUD_VISIBILITY_KEY = KeyBindingHelper.registerKeyBinding(
+            new KeyBinding(
+                "key.stoneworks_chat.toggle_hud_visibility",
+                GLFW.GLFW_KEY_V,
+                "key.categories.stoneworks_chat"
+            )
+        );
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ChatConfirmationListener.checkTimeout();
 
@@ -76,6 +86,11 @@ public class StoneworksChatClient implements ClientModInitializer {
             while (OPEN_HUD_CONFIG_KEY != null && OPEN_HUD_CONFIG_KEY.wasPressed()) {
                 var parent = client.currentScreen;
                 client.setScreen(new HudConfigScreen(parent));
+            }
+
+            while (TOGGLE_HUD_VISIBILITY_KEY != null && TOGGLE_HUD_VISIBILITY_KEY.wasPressed()) {
+                hudVisible = !hudVisible;
+                ChatConfig.save();
             }
 
             net.minecraft.client.gui.screen.Screen current = client.currentScreen;

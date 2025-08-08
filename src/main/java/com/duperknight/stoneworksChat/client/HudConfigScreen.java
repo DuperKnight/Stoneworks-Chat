@@ -55,13 +55,14 @@ public class HudConfigScreen extends Screen {
             this.previewH = bgH;
 
             if (StoneworksChatClient.hudAnchorX != null && StoneworksChatClient.hudAnchorY != null) {
-                int leftX;
+                // Anchor line (screen-based), independent of alignment
+                int anchorCoordX;
                 switch (StoneworksChatClient.hudAnchorX) {
-                    case LEFT -> leftX = StoneworksChatClient.hudOffsetX;
-                    case CENTER -> leftX = (this.width / 2) + StoneworksChatClient.hudOffsetX - bgW / 2;
-                    case RIGHT -> leftX = this.width - StoneworksChatClient.hudOffsetX - bgW;
-                    default -> leftX = StoneworksChatClient.hudPosX; // fallback
+                    case RIGHT -> anchorCoordX = this.width - StoneworksChatClient.hudOffsetX;
+                    case CENTER -> anchorCoordX = (this.width / 2) + StoneworksChatClient.hudOffsetX;
+                    default -> anchorCoordX = StoneworksChatClient.hudOffsetX; // LEFT or fallback
                 }
+
                 int topY;
                 switch (StoneworksChatClient.hudAnchorY) {
                     case TOP -> topY = StoneworksChatClient.hudOffsetY;
@@ -69,11 +70,9 @@ public class HudConfigScreen extends Screen {
                     case BOTTOM -> topY = this.height - StoneworksChatClient.hudOffsetY - bgH;
                     default -> topY = StoneworksChatClient.hudPosY; // fallback
                 }
-                switch (currentAlign) {
-                    case RIGHT_TO_LEFT -> this.currentX = leftX + bgW;
-                    case CENTER -> this.currentX = leftX + bgW / 2;
-                    case LEFT_TO_RIGHT -> this.currentX = leftX;
-                }
+
+                // In preview, currentX represents the anchor line position; box is derived from it per alignment
+                this.currentX = anchorCoordX;
                 this.currentY = topY;
             }
         } catch (Exception ignored) {
@@ -105,15 +104,27 @@ public class HudConfigScreen extends Screen {
                 int distCenter = Math.abs((leftX + boxW / 2) - (screenW / 2));
                 int distRight = Math.abs((screenW - (leftX + boxW)));
 
+                // Determine which screen anchor line is closest (left edge, screen center, right edge)
                 if (distCenter <= distLeft && distCenter <= distRight) {
                     StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.CENTER;
-                    StoneworksChatClient.hudOffsetX = (leftX + boxW / 2) - (screenW / 2);
                 } else if (distLeft <= distRight) {
                     StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.LEFT;
-                    StoneworksChatClient.hudOffsetX = leftX;
                 } else {
                     StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.RIGHT;
-                    StoneworksChatClient.hudOffsetX = screenW - (leftX + boxW);
+                }
+
+                // Compute the anchor line on the BOX based on current alignment
+                int anchorLineX = switch (currentAlign) {
+                    case LEFT_TO_RIGHT -> leftX;                 // left edge of box
+                    case CENTER -> leftX + (boxW / 2);           // center of box
+                    case RIGHT_TO_LEFT -> leftX + boxW;          // right edge of box
+                };
+
+                // Save offset relative to the chosen screen anchor line
+                switch (StoneworksChatClient.hudAnchorX) {
+                    case CENTER -> StoneworksChatClient.hudOffsetX = anchorLineX - (screenW / 2);
+                    case LEFT -> StoneworksChatClient.hudOffsetX = anchorLineX;
+                    case RIGHT -> StoneworksChatClient.hudOffsetX = screenW - anchorLineX;
                 }
 
                 int topY = currentY;
@@ -248,13 +259,24 @@ public class HudConfigScreen extends Screen {
 
             int leftX = rtl ? (currentX - bgW) : (centerAlign ? (currentX - bgW / 2) : currentX);
 
-            drawContext.fill(leftX, currentY, leftX + bgW, currentY + bgH, 0x80000000);
+            int bgColor = StoneworksChatClient.hudVisible ? 0x80000000 : 0x40404040;
+            drawContext.fill(leftX, currentY, leftX + bgW, currentY + bgH, bgColor);
 
-            int borderColor = 0x80FFFFFF;
+            int borderColor = StoneworksChatClient.hudVisible ? 0x80FFFFFF : 0x60AAAAAA;
             drawContext.fill(leftX, currentY, leftX + bgW, currentY + 1, borderColor);
             drawContext.fill(leftX, currentY + bgH - 1, leftX + bgW, currentY + bgH, borderColor);
             drawContext.fill(leftX, currentY, leftX + 1, currentY + bgH, borderColor);
             drawContext.fill(leftX + bgW - 1, currentY, leftX + bgW, currentY + bgH, borderColor);
+
+            // Anchor marker to visualize alignment (left/center/right) in preview
+            int anchorXpx = switch (currentAlign) {
+                case LEFT_TO_RIGHT -> leftX;
+                case CENTER -> leftX + (bgW / 2);
+                case RIGHT_TO_LEFT -> leftX + bgW;
+            };
+            int markerTop = Math.max(0, currentY - 4);
+            int markerColor = 0xFF80C0FF; // light blue
+            drawContext.fill(anchorXpx, markerTop, anchorXpx + 1, currentY, markerColor);
 
             int textX;
             if (rtl) {
@@ -267,7 +289,9 @@ public class HudConfigScreen extends Screen {
             int textY = currentY + Math.round((bgH - textH) / 2f) + 1;
 
             int colorCode = HudOverlayRenderer.getColorCode(color);
-            drawContext.drawText(tr, text, textX, textY, colorCode, true);
+            if (StoneworksChatClient.hudVisible) {
+                drawContext.drawText(tr, text, textX, textY, colorCode, true);
+            }
         }
 
         drawContext.drawCenteredTextWithShadow(
@@ -277,6 +301,12 @@ public class HudConfigScreen extends Screen {
             this.height - 84,
             0xAAAAAA
         );
+
+        // Show visibility status below the help
+        Text vis = Text.translatable(
+            StoneworksChatClient.hudVisible ? "screen.stoneworks_chat.hud_config.visible" : "screen.stoneworks_chat.hud_config.hidden"
+        );
+        drawContext.drawCenteredTextWithShadow(textRenderer, vis, this.width / 2, this.height - 72, 0xCCCCCC);
 
         drawContext.getMatrices().pop();
     }
@@ -326,6 +356,13 @@ public class HudConfigScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 1) { // Right click toggles visibility when clicking the preview
+            if (hitPreview(mouseX, mouseY)) {
+                StoneworksChatClient.hudVisible = !StoneworksChatClient.hudVisible;
+                ChatConfig.save();
+                return true;
+            }
+        }
         if (button == 0) {
             if (hitPreview(mouseX, mouseY)) {
                 dragging = true;
