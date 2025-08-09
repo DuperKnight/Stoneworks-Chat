@@ -53,6 +53,7 @@ public class ChatConfig {
                 Object anchorY = config.get("hudAnchorY");
                 Object offX = config.get("hudOffsetX");
                 Object offY = config.get("hudOffsetY");
+                Object scale = config.get("hudScale");
                 if (hudX instanceof Number nX) StoneworksChatClient.hudPosX = nX.intValue();
                 if (hudY instanceof Number nY) StoneworksChatClient.hudPosY = nY.intValue();
                 if (fx instanceof Number nx) StoneworksChatClient.hudPosXFrac = nx.floatValue();
@@ -65,6 +66,7 @@ public class ChatConfig {
                 }
                 if (offX instanceof Number ox) StoneworksChatClient.hudOffsetX = ox.intValue();
                 if (offY instanceof Number oy) StoneworksChatClient.hudOffsetY = oy.intValue();
+                if (scale instanceof Number sc) StoneworksChatClient.hudScale = Math.max(StoneworksChatClient.HUD_MIN_SCALE, Math.min(StoneworksChatClient.HUD_MAX_SCALE, sc.floatValue()));
                 if (align instanceof String s) {
                     if ("rtl".equalsIgnoreCase(s)) {
                         StoneworksChatClient.hudTextAlign = StoneworksChatClient.TextAlign.RIGHT_TO_LEFT;
@@ -116,6 +118,7 @@ public class ChatConfig {
     config.put("hudOffsetX", StoneworksChatClient.hudOffsetX);
     config.put("hudOffsetY", StoneworksChatClient.hudOffsetY);
     config.put("showHudTutorial", StoneworksChatClient.showHudTutorial);
+    config.put("hudScale", StoneworksChatClient.hudScale);
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(config, writer);

@@ -37,6 +37,11 @@ public class StoneworksChatClient implements ClientModInitializer {
     public static int hudPosX = 10;
     public static int hudPosY = 10;
     public static TextAlign hudTextAlign = TextAlign.LEFT_TO_RIGHT;
+
+    public static float hudScale = 1.0f;
+
+    public static final float HUD_MIN_SCALE = 0.75f;
+    public static final float HUD_MAX_SCALE = 4.0f;
     
     public static float hudPosXFrac = -1f;
     public static float hudPosYFrac = -1f;
