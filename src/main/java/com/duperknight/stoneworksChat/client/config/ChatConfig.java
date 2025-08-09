@@ -44,7 +44,6 @@ public class ChatConfig {
                 }
                 StoneworksChatClient.channels = loadedChannels;
 
-                // HUD position and alignment
                 Object hudX = config.get("hudX");
                 Object hudY = config.get("hudY");
                 Object align = config.get("textAlign");
@@ -75,6 +74,14 @@ public class ChatConfig {
                         StoneworksChatClient.hudTextAlign = StoneworksChatClient.TextAlign.LEFT_TO_RIGHT;
                     }
                 }
+                Object visible = config.get("hudVisible");
+                if (visible instanceof Boolean bv) {
+                    StoneworksChatClient.hudVisible = bv;
+                }
+                Object tut = config.get("showHudTutorial");
+                if (tut instanceof Boolean bt) {
+                    StoneworksChatClient.showHudTutorial = bt;
+                }
         LOGGER.info("Loaded config: currentChannel = {}", StoneworksChatClient.currentChannel);
             } catch (IOException e) {
                 LOGGER.error("Failed to load config {}", CONFIG_FILE.getAbsolutePath(), e);
@@ -96,7 +103,8 @@ public class ChatConfig {
             case CENTER -> "center";
             case RIGHT_TO_LEFT -> "rtl";
         };
-        config.put("textAlign", align);
+    config.put("textAlign", align);
+    config.put("hudVisible", StoneworksChatClient.hudVisible);
     if (StoneworksChatClient.hudPosXFrac >= 0f) config.put("hudXFrac", StoneworksChatClient.hudPosXFrac);
     if (StoneworksChatClient.hudPosYFrac >= 0f) config.put("hudYFrac", StoneworksChatClient.hudPosYFrac);
         if (StoneworksChatClient.hudAnchorX != null) {
@@ -107,6 +115,7 @@ public class ChatConfig {
         }
     config.put("hudOffsetX", StoneworksChatClient.hudOffsetX);
     config.put("hudOffsetY", StoneworksChatClient.hudOffsetY);
+    config.put("showHudTutorial", StoneworksChatClient.showHudTutorial);
 
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(config, writer);
@@ -121,8 +130,8 @@ public class ChatConfig {
         addDefaultChannel("LocalChat", "Local", "green", new String[]{"/l", "/local"});
         addDefaultChannel("TradeChat", "Trade", "cyan", new String[]{"/tradechat", "/tc"});
         addDefaultChannel("RPChat", "Roleplay", "light_red", new String[]{"/rpc"});
-        //addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"});
-        //addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"});
+        addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"});
+        addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"});
     }
 
     private static void addDefaultChannel(String key, String display, String color, String[] aliases) {

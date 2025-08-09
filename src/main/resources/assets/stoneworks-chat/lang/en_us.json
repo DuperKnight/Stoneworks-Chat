@@ -10,5 +10,10 @@
     "screen.stoneworks_chat.hud_config.drag_help": "Drag the box to move the Chat HUD",
     "screen.stoneworks_chat.hud_config.visible": "HUD: Visible (right-click to toggle)",
     "screen.stoneworks_chat.hud_config.hidden": "HUD: Hidden (right-click to toggle)",
+    "screen.stoneworks_chat.hud_config.tutorial.title": "HUD Controls",
+    "screen.stoneworks_chat.hud_config.tutorial.move": "Use arrow keys or drag to move",
+    "screen.stoneworks_chat.hud_config.tutorial.fast": "Hold Shift for faster movement",
+    "screen.stoneworks_chat.hud_config.tutorial.ok": "OK",
+    "screen.stoneworks_chat.hud_config.tutorial.dont_show": "Don't show again",
     "stoneworks_chat.chat_prefix": "Chat: %s"
 }

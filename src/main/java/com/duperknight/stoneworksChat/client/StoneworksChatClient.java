@@ -49,6 +49,7 @@ public class StoneworksChatClient implements ClientModInitializer {
     public static int hudOffsetX = -1; 
     public static int hudOffsetY = -1; 
     public static boolean hudVisible = true;
+    public static boolean showHudTutorial = true;
 
     
     private static KeyBinding OPEN_HUD_CONFIG_KEY;
