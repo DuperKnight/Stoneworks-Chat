@@ -81,7 +81,8 @@ public class HudConfigScreen extends Screen {
             this.previewW = bgW;
             this.previewH = bgH;
 
-            if (StoneworksChatClient.hudAnchorX != null && StoneworksChatClient.hudAnchorY != null) {
+            if (StoneworksChatClient.hudAnchorX != null && StoneworksChatClient.hudAnchorY != null &&
+                StoneworksChatClient.hudOffsetX >= 0 && StoneworksChatClient.hudOffsetY >= 0) {
                 int anchorCoordX;
                 switch (StoneworksChatClient.hudAnchorX) {
                     case RIGHT -> anchorCoordX = this.width - StoneworksChatClient.hudOffsetX;
@@ -109,62 +110,22 @@ public class HudConfigScreen extends Screen {
         }).dimensions(centerX - btnW / 2, this.height - (btnH * 2 + spacing + 12), btnW, btnH).build());
 
     doneBtn = addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> {
-            StoneworksChatClient.hudTextAlign = currentAlign;
+        // Preserve alignment behavior but store raw alignment coordinate & top-left reference
+        StoneworksChatClient.hudTextAlign = currentAlign;
 
-                int screenW = this.width;
-                int screenH = this.height;
-        int boxW = Math.round(previewW * StoneworksChatClient.hudScale);
-        int boxH = Math.round(previewH * StoneworksChatClient.hudScale);
-
-                int leftX = switch (currentAlign) {
-                    case RIGHT_TO_LEFT -> currentX - boxW;
-                    case CENTER -> currentX - boxW / 2;
-                    case LEFT_TO_RIGHT -> currentX;
-                };
-
-                int distLeft = leftX;
-                int distCenter = Math.abs((leftX + boxW / 2) - (screenW / 2));
-                int distRight = Math.abs((screenW - (leftX + boxW)));
-
-                if (distCenter <= distLeft && distCenter <= distRight) {
-                    StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.CENTER;
-                } else if (distLeft <= distRight) {
-                    StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.LEFT;
-                } else {
-                    StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.RIGHT;
-                }
-
-                int anchorLineX = switch (currentAlign) {
-                    case LEFT_TO_RIGHT -> leftX;                 // left edge of box
-                    case CENTER -> leftX + (boxW / 2);           // center of box
-                    case RIGHT_TO_LEFT -> leftX + boxW;          // right edge of box
-                };
-
-                switch (StoneworksChatClient.hudAnchorX) {
-                    case CENTER -> StoneworksChatClient.hudOffsetX = anchorLineX - (screenW / 2);
-                    case LEFT -> StoneworksChatClient.hudOffsetX = anchorLineX;
-                    case RIGHT -> StoneworksChatClient.hudOffsetX = screenW - anchorLineX;
-                }
-
-                int topY = currentY;
-                int distTop = topY;
-                int distMid = Math.abs((topY + boxH / 2) - (screenH / 2));
-                int distBot = Math.abs((screenH - (topY + boxH)));
-
-                if (distMid <= distTop && distMid <= distBot) {
-                    StoneworksChatClient.hudAnchorY = StoneworksChatClient.AnchorY.CENTER;
-                    StoneworksChatClient.hudOffsetY = (topY + boxH / 2) - (screenH / 2);
-                } else if (distTop <= distBot) {
-                    StoneworksChatClient.hudAnchorY = StoneworksChatClient.AnchorY.TOP;
-                    StoneworksChatClient.hudOffsetY = topY;
-                } else {
-                    StoneworksChatClient.hudAnchorY = StoneworksChatClient.AnchorY.BOTTOM;
-                    StoneworksChatClient.hudOffsetY = screenH - (topY + boxH);
-                }
-
-            ChatConfig.save();
-            close();
-        }).dimensions(centerX - btnW / 2, this.height - (btnH + 12), btnW, btnH).build());
+        // Store currentX/currentY directly; disable anchor offsets to avoid scale drift
+    StoneworksChatClient.hudPosX = currentX; // alignment line (left / center / right edge depending on alignment)
+    StoneworksChatClient.hudPosY = currentY; // top edge
+    StoneworksChatClient.hudPosXFrac = -1f;
+    StoneworksChatClient.hudPosYFrac = -1f;
+    StoneworksChatClient.hudOffsetX = -1; // signal: use raw pos fields
+    StoneworksChatClient.hudOffsetY = -1;
+    // Null anchors so re-opening config uses raw stored coords
+    StoneworksChatClient.hudAnchorX = null;
+    StoneworksChatClient.hudAnchorY = null;
+        ChatConfig.save();
+        close();
+    }).dimensions(centerX - btnW / 2, this.height - (btnH + 12), btnW, btnH).build());
 
         tutorialOkBtn = addDrawableChild(ButtonWidget.builder(Text.translatable("screen.stoneworks_chat.hud_config.tutorial.ok"), b -> {
             this.showTutorialPopup = false;

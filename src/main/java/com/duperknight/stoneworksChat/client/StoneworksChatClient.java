@@ -48,9 +48,9 @@ public class StoneworksChatClient implements ClientModInitializer {
 
     
     public enum AnchorX { LEFT, CENTER, RIGHT }
-    public static AnchorX hudAnchorX = AnchorX.LEFT;
+    public static AnchorX hudAnchorX = null; // may be null when using raw coordinates
     public enum AnchorY { TOP, CENTER, BOTTOM }
-    public static AnchorY hudAnchorY = AnchorY.TOP;
+    public static AnchorY hudAnchorY = null; // may be null when using raw coordinates
     public static int hudOffsetX = -1; 
     public static int hudOffsetY = -1; 
     public static boolean hudVisible = true;

@@ -18,14 +18,14 @@ public class HudOverlayRenderer {
             }
             Map<String, Object> channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
             if (channelInfo != null) {
-                String display = (String) channelInfo.get("display");
+                String display = (String) channelInfo.get("display"); // kept for translatable prefix
                 String color = (String) channelInfo.get("color");
                 Text text = Text.translatable("stoneworks_chat.chat_prefix", (display != null ? display : ""));
 
                 int screenW = drawContext.getScaledWindowWidth();
                 int screenH = drawContext.getScaledWindowHeight();
 
-                int xAnchor = StoneworksChatClient.hudPosX;
+                // hudPosX used directly later (alignLine); no separate xAnchor needed
                 int y = StoneworksChatClient.hudPosY;
                 int colorCode = getColorCode(color);
                 var tr = MinecraftClient.getInstance().textRenderer;
@@ -42,9 +42,7 @@ public class HudOverlayRenderer {
                 boolean rtl = (StoneworksChatClient.hudTextAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
                 boolean center = (StoneworksChatClient.hudTextAlign == StoneworksChatClient.TextAlign.CENTER);
                 int leftX;
-                boolean useAnchorX = (StoneworksChatClient.hudAnchorX == StoneworksChatClient.AnchorX.CENTER)
-                    || (StoneworksChatClient.hudOffsetX >= 0);
-                if (useAnchorX) {
+                if (StoneworksChatClient.hudOffsetX >= 0) {
                     int anchorCoordX;
                     switch (StoneworksChatClient.hudAnchorX) {
                         case RIGHT:
@@ -58,26 +56,38 @@ public class HudOverlayRenderer {
                             anchorCoordX = StoneworksChatClient.hudOffsetX;
                             break;
                     }
-                    leftX = rtl ? (anchorCoordX - scaledBgW)
-                                 : (center ? (anchorCoordX - (scaledBgW / 2))
-                                           : anchorCoordX);
+                    leftX = rtl ? (anchorCoordX - scaledBgW) : (center ? (anchorCoordX - (scaledBgW / 2)) : anchorCoordX);
                 } else {
-                    if (StoneworksChatClient.hudPosXFrac >= 0f) {
-                        xAnchor = Math.round(StoneworksChatClient.hudPosXFrac * screenW);
+                    int alignLine = StoneworksChatClient.hudPosX;
+                    switch (StoneworksChatClient.hudTextAlign) {
+                        case LEFT_TO_RIGHT:
+                            leftX = alignLine;
+                            break;
+                        case CENTER:
+                            leftX = alignLine - (scaledBgW / 2);
+                            break;
+                        case RIGHT_TO_LEFT:
+                        default:
+                            leftX = alignLine - scaledBgW;
+                            break;
                     }
-                    leftX = rtl ? (xAnchor - scaledBgW) : (center ? (xAnchor - scaledBgW / 2) : xAnchor);
                 }
 
-                boolean useAnchorY = (StoneworksChatClient.hudAnchorY == StoneworksChatClient.AnchorY.CENTER)
-                    || (StoneworksChatClient.hudOffsetY >= 0);
-                if (useAnchorY) {
+                if (StoneworksChatClient.hudOffsetY >= 0) {
                     switch (StoneworksChatClient.hudAnchorY) {
-            case BOTTOM: y = screenH - StoneworksChatClient.hudOffsetY - scaledBgH; break;
-            case CENTER: y = (screenH / 2) - (scaledBgH / 2) + StoneworksChatClient.hudOffsetY; break;
-                        case TOP: default: y = StoneworksChatClient.hudOffsetY; break;
+                        case BOTTOM:
+                            y = screenH - StoneworksChatClient.hudOffsetY - scaledBgH;
+                            break;
+                        case CENTER:
+                            y = (screenH / 2) - (scaledBgH / 2) + StoneworksChatClient.hudOffsetY;
+                            break;
+                        case TOP:
+                        default:
+                            y = StoneworksChatClient.hudOffsetY;
+                            break;
                     }
-                } else if (StoneworksChatClient.hudPosYFrac >= 0f) {
-                    y = Math.round(StoneworksChatClient.hudPosYFrac * screenH);
+                } else {
+                    y = StoneworksChatClient.hudPosY;
                 }
         drawContext.fill(leftX, y, leftX + scaledBgW, y + scaledBgH, 0x80000000);
 
