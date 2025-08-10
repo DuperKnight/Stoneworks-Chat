@@ -39,6 +39,7 @@ public class HudConfigScreen extends Screen {
     private enum Handle { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT }
     private Handle activeHandle = null;
     private float startScale = 1.0f;
+    private float workingScale = 1.0f;
     private double resizeOriginMouseDist = 0.0;
     private int resizeAnchorX = 0;
     private int resizeAnchorY = 0;
@@ -58,6 +59,7 @@ public class HudConfigScreen extends Screen {
     this.currentX = StoneworksChatClient.hudPosX;
     this.currentY = StoneworksChatClient.hudPosY;
         this.currentAlign = StoneworksChatClient.hudTextAlign;
+        this.workingScale = StoneworksChatClient.hudScale;
     }
 
     @Override
@@ -83,7 +85,7 @@ public class HudConfigScreen extends Screen {
 
             if (StoneworksChatClient.hudAnchorX != null && StoneworksChatClient.hudAnchorY != null &&
                 StoneworksChatClient.hudOffsetX >= 0 && StoneworksChatClient.hudOffsetY >= 0) {
-                float scale = StoneworksChatClient.hudScale;
+                float scale = workingScale;
                 int scaledBgW = Math.round(bgW * scale);
                 int scaledBgH = Math.round(bgH * scale);
                 int screenW = this.width;
@@ -137,8 +139,8 @@ public class HudConfigScreen extends Screen {
 
         int screenW = this.width;
         int screenH = this.height;
-        int boxW = Math.round(previewW * StoneworksChatClient.hudScale);
-        int boxH = Math.round(previewH * StoneworksChatClient.hudScale);
+        int boxW = Math.round(previewW * workingScale);
+        int boxH = Math.round(previewH * workingScale);
         int leftX = switch (currentAlign) {
             case RIGHT_TO_LEFT -> currentX - boxW;
             case CENTER -> currentX - boxW / 2;
@@ -181,6 +183,7 @@ public class HudConfigScreen extends Screen {
         StoneworksChatClient.hudPosX = currentX;
         StoneworksChatClient.hudPosY = currentY;
         
+        StoneworksChatClient.hudScale = workingScale;
         ChatConfig.save();
         close();
     }).dimensions(centerX - btnW / 2, this.height - (btnH + 12), btnW, btnH).build());
@@ -201,7 +204,7 @@ public class HudConfigScreen extends Screen {
     }
 
     private void toggleAlign() {
-        int boxW = Math.round(previewW * StoneworksChatClient.hudScale);
+        int boxW = Math.round(previewW * workingScale);
         boolean wasRtl = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
         boolean wasCenter = (currentAlign == StoneworksChatClient.TextAlign.CENTER);
         int leftXBefore = wasRtl ? (currentX - boxW) : (wasCenter ? (currentX - boxW / 2) : currentX);
@@ -270,7 +273,7 @@ public class HudConfigScreen extends Screen {
             int textH = tr.fontHeight;
             int bgW = textW + paddingX * 2;
             int bgH = textH + paddingY * 2;
-            float scale = StoneworksChatClient.hudScale;
+            float scale = workingScale;
             int scaledBgW = Math.round(bgW * scale);
             int scaledBgH = Math.round(bgH * scale);
             previewW = bgW;
@@ -346,7 +349,7 @@ public class HudConfigScreen extends Screen {
             else if (hoverOrActive(Handle.BOTTOM_RIGHT)) drawHandle(drawContext, brX, brY, hoverOrActive(Handle.BOTTOM_RIGHT));
 
             if (resizing && activeHandle != null) {
-                String scaleStr = String.format("%.2fx", StoneworksChatClient.hudScale);
+                String scaleStr = String.format("%.2fx", workingScale);
                 int labelY = switch (activeHandle) {
                     case TOP_LEFT, TOP_RIGHT -> currentY + scaledBgH + 4;
                     case BOTTOM_LEFT, BOTTOM_RIGHT -> currentY - 10 - textRenderer.fontHeight;
@@ -503,17 +506,16 @@ public class HudConfigScreen extends Screen {
         }
         if (button == 0) {
             if (handleDoubleClick(mouseX, mouseY)) {
-                StoneworksChatClient.hudScale = Math.round(1.0f / SCALE_SNAP_INCREMENT) * SCALE_SNAP_INCREMENT;
-                ChatConfig.save();
+                workingScale = Math.round(1.0f / SCALE_SNAP_INCREMENT) * SCALE_SNAP_INCREMENT;
                 return true;
             }
             if (hoveringTL || hoveringTR || hoveringBL || hoveringBR) {
                 resizing = true;
-                startScale = StoneworksChatClient.hudScale;
+                startScale = workingScale;
                 activeHandle = hoveringTL ? Handle.TOP_LEFT : hoveringTR ? Handle.TOP_RIGHT : hoveringBL ? Handle.BOTTOM_LEFT : Handle.BOTTOM_RIGHT;
                 boolean rtl = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
                 boolean centerAlign = (currentAlign == StoneworksChatClient.TextAlign.CENTER);
-                float scale = StoneworksChatClient.hudScale;
+                float scale = workingScale;
                 int scaledBgW = Math.round(previewW * scale);
                 int scaledBgH = Math.round(previewH * scale);
                 int leftX = rtl ? (currentX - scaledBgW) : (centerAlign ? (currentX - scaledBgW / 2) : currentX);
@@ -532,8 +534,8 @@ public class HudConfigScreen extends Screen {
             if (hitPreview(mouseX, mouseY)) {
                 dragging = true;
                 int leftX = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT)
-                    ? (currentX - Math.round(previewW * StoneworksChatClient.hudScale))
-                    : (currentAlign == StoneworksChatClient.TextAlign.CENTER ? (currentX - Math.round(previewW * StoneworksChatClient.hudScale) / 2) : currentX);
+                    ? (currentX - Math.round(previewW * workingScale))
+                    : (currentAlign == StoneworksChatClient.TextAlign.CENTER ? (currentX - Math.round(previewW * workingScale) / 2) : currentX);
                 dragOffsetX = (int)mouseX - leftX;
                 dragOffsetY = (int)mouseY - currentY;
                 return true;
@@ -554,8 +556,8 @@ public class HudConfigScreen extends Screen {
             newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
             newScale = Math.round(newScale / SCALE_SNAP_INCREMENT) * SCALE_SNAP_INCREMENT;
 
-            if (newScale != StoneworksChatClient.hudScale) {
-                StoneworksChatClient.hudScale = newScale;
+            if (newScale != workingScale) {
+                workingScale = newScale;
                 boolean rtl = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
                 boolean centerAlign = (currentAlign == StoneworksChatClient.TextAlign.CENTER);
                 int newW = Math.round(previewW * newScale);
@@ -611,22 +613,22 @@ public class HudConfigScreen extends Screen {
                 currentX = clamp(currentX, 0, this.width - previewW);
             } else switch (currentAlign) {
                 case RIGHT_TO_LEFT -> {
-                    int scaledW = Math.round(previewW * StoneworksChatClient.hudScale);
+                    int scaledW = Math.round(previewW * workingScale);
                     currentX = leftX + scaledW;
                     currentX = clamp(currentX, scaledW, this.width);
                 }
                 case CENTER -> {
-                    int scaledW = Math.round(previewW * StoneworksChatClient.hudScale);
+                    int scaledW = Math.round(previewW * workingScale);
                     currentX = leftX + scaledW / 2;
                     currentX = clamp(currentX, scaledW / 2, this.width - scaledW / 2);
                 }
                 default -> {
-                    int scaledW = Math.round(previewW * StoneworksChatClient.hudScale);
+                    int scaledW = Math.round(previewW * workingScale);
                     currentX = leftX;
                     currentX = clamp(currentX, 0, this.width - scaledW);
                 }
             }
-            int scaledH = Math.round(previewH * StoneworksChatClient.hudScale);
+            int scaledH = Math.round(previewH * workingScale);
             currentY = clamp(currentY, 0, this.height - scaledH);
             return true;
         }
@@ -642,7 +644,6 @@ public class HudConfigScreen extends Screen {
         if (resizing && button == 0) {
             resizing = false;
             activeHandle = null;
-            ChatConfig.save();
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
@@ -659,7 +660,7 @@ public class HudConfigScreen extends Screen {
     private boolean hitPreview(double mouseX, double mouseY) {
         boolean rtl = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
         boolean centerAlign = (currentAlign == StoneworksChatClient.TextAlign.CENTER);
-    float scale = StoneworksChatClient.hudScale;
+        float scale = workingScale;
     int scaledW = Math.round(previewW * scale);
     int scaledH = Math.round(previewH * scale);
     int leftX = rtl ? (currentX - scaledW) : (centerAlign ? (currentX - scaledW / 2) : currentX);
@@ -680,7 +681,7 @@ public class HudConfigScreen extends Screen {
     private long lastHandleClickTime = 0L;
     private static final long DOUBLE_CLICK_MS = 300; // threshold
     private boolean handleDoubleClick(double mouseX, double mouseY) {
-        float scale = StoneworksChatClient.hudScale;
+        float scale = workingScale;
         int scaledBgW = Math.round(previewW * scale);
         int scaledBgH = Math.round(previewH * scale);
         boolean rtl = (currentAlign == StoneworksChatClient.TextAlign.RIGHT_TO_LEFT);
@@ -752,8 +753,8 @@ public class HudConfigScreen extends Screen {
         }
 
         if (handled) {
-            int scaledW = Math.round(previewW * StoneworksChatClient.hudScale);
-            int scaledH = Math.round(previewH * StoneworksChatClient.hudScale);
+            int scaledW = Math.round(previewW * workingScale);
+            int scaledH = Math.round(previewH * workingScale);
             if (null == currentAlign) {
                 currentX = clamp(currentX, 0, this.width - scaledW);
             } else currentX = switch (currentAlign) {
