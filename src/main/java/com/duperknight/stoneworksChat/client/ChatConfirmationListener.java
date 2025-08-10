@@ -252,18 +252,11 @@ public class ChatConfirmationListener {
         String best = findBestKeyForRaw(rawName);
         if (best != null) return best;
         String key = rawName;
-        java.util.Map<String, Object> info = new java.util.HashMap<>();
-        info.put("display", rawName);
-        info.put("color", "white");
-        info.put("aliases", new String[]{});
-        info.put("uiName", rawName);
-        StoneworksChatClient.channels.put(key, info);
+        StoneworksChatClient.channels.put(key, new Channel(rawName, "white", java.util.List.of(), rawName));
         return key;
     }
 
-    private static String resolveChannelKeyNoCreate(String rawName) {
-        return findBestKeyForRaw(rawName);
-    }
+    // removed unused resolveChannelKeyNoCreate
 
     private static void beginStatusMute() {
         muteStatusLinesActive = true;
@@ -300,17 +293,19 @@ public class ChatConfirmationListener {
         for (String key : StoneworksChatClient.channels.keySet()) {
             if (!isCanonical(key)) continue;
             if (normalizeName(key).equals(normalizedRaw)) return key;
-            Object disp = StoneworksChatClient.channels.get(key).get("display");
-            if (disp != null && normalizeName(disp.toString()).equals(normalizedRaw)) return key;
-            Object ui = StoneworksChatClient.channels.get(key).get("uiName");
-            if (ui != null && normalizeName(ui.toString()).equals(normalizedRaw)) return key;
+            Channel ch = StoneworksChatClient.channels.get(key);
+            if (ch != null) {
+                if (ch.display() != null && normalizeName(ch.display()).equals(normalizedRaw)) return key;
+                if (ch.uiName() != null && normalizeName(ch.uiName()).equals(normalizedRaw)) return key;
+            }
         }
         for (String key : StoneworksChatClient.channels.keySet()) {
             if (normalizeName(key).equals(normalizedRaw)) return key;
-            Object disp = StoneworksChatClient.channels.get(key).get("display");
-            if (disp != null && normalizeName(disp.toString()).equals(normalizedRaw)) return key;
-            Object ui = StoneworksChatClient.channels.get(key).get("uiName");
-            if (ui != null && normalizeName(ui.toString()).equals(normalizedRaw)) return key;
+            Channel ch = StoneworksChatClient.channels.get(key);
+            if (ch != null) {
+                if (ch.display() != null && normalizeName(ch.display()).equals(normalizedRaw)) return key;
+                if (ch.uiName() != null && normalizeName(ch.uiName()).equals(normalizedRaw)) return key;
+            }
         }
         return null;
     }

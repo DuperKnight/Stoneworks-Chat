@@ -3,7 +3,6 @@ package com.duperknight.stoneworksChat.client;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
-import java.util.Map;
 
 public class HudOverlayRenderer {
     public static void register() {
@@ -16,10 +15,10 @@ public class HudOverlayRenderer {
             if (!StoneworksChatClient.hudVisible) {
                 return; // HUD hidden
             }
-            Map<String, Object> channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
+            Channel channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
             if (channelInfo != null) {
-                String display = (String) channelInfo.get("display"); // kept for translatable prefix
-                String color = (String) channelInfo.get("color");
+                String display = channelInfo.display(); // kept for translatable prefix
+                String color = channelInfo.color();
                 Text text = Text.translatable("stoneworks_chat.chat_prefix", (display != null ? display : ""));
 
                 int screenW = drawContext.getScaledWindowWidth();
@@ -106,6 +105,7 @@ public class HudOverlayRenderer {
     }
 
     public static int getColorCode(String color) {
+        if (color == null) return 0xFFFFFF;
         return switch (color.toLowerCase()) {
             case "green" -> 0x00FF00;
             case "white" -> 0xFFFFFF;

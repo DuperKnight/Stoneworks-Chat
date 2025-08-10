@@ -19,20 +19,12 @@ public class ChatCommandListener {
                 }
             }
 
-            for (Map.Entry<String, Map<String, Object>> entry : StoneworksChatClient.channels.entrySet()) {
+            for (Map.Entry<String, Channel> entry : StoneworksChatClient.channels.entrySet()) {
                 String key = entry.getKey();
-                Object aliasesObj = entry.getValue().get("aliases");
-                if (aliasesObj instanceof List<?>) {
-                    for (Object aliasObj : (List<?>) aliasesObj) {
-                        String alias = aliasObj.toString();
-                        String aliasNoSlash = alias.startsWith("/") ? alias.substring(1) : alias;
-                        if (lowered.equals(aliasNoSlash) || lowered.startsWith(aliasNoSlash + " ")) {
-                            StoneworksChatClient.pendingChannel = key;
-                            return true;
-                        }
-                    }
-                } else if (aliasesObj instanceof String[]) {
-                    for (String alias : (String[]) aliasesObj) {
+                Channel channel = entry.getValue();
+                List<String> aliases = channel.aliases();
+                if (aliases != null) {
+                    for (String alias : aliases) {
                         String aliasNoSlash = alias.startsWith("/") ? alias.substring(1) : alias;
                         if (lowered.equals(aliasNoSlash) || lowered.startsWith(aliasNoSlash + " ")) {
                             StoneworksChatClient.pendingChannel = key;

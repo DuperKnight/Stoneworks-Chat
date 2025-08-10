@@ -1,6 +1,7 @@
 package com.duperknight.stoneworksChat.client.config;
 
 import com.duperknight.stoneworksChat.client.StoneworksChatClient;
+import com.duperknight.stoneworksChat.client.Channel;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -28,17 +29,23 @@ public class ChatConfig {
                 Object cc = config.get("currentChannel");
                 StoneworksChatClient.currentChannel = cc instanceof String ? (String) cc : "public";
                 Object channelsObj = config.get("channels");
-                Map<String, Map<String, Object>> loadedChannels = new HashMap<>();
+                Map<String, Channel> loadedChannels = new HashMap<>();
                 if (channelsObj instanceof Map<?, ?> rawMap) {
                     for (Map.Entry<?, ?> e : rawMap.entrySet()) {
                         if (e.getKey() instanceof String key && e.getValue() instanceof Map<?, ?> inner) {
-                            Map<String, Object> innerMap = new HashMap<>();
-                            for (Map.Entry<?, ?> ie : inner.entrySet()) {
-                                if (ie.getKey() instanceof String ik) {
-                                    innerMap.put(ik, ie.getValue());
-                                }
+                            String display = inner.get("display") instanceof String s ? s : key;
+                            String color = inner.get("color") instanceof String s ? s : "white";
+                            java.util.List<String> aliases;
+                            Object aliasesObj = inner.get("aliases");
+                            if (aliasesObj instanceof java.util.List<?> list) {
+                                aliases = list.stream().map(Object::toString).toList();
+                            } else if (aliasesObj instanceof String[] arr) {
+                                aliases = java.util.Arrays.asList(arr);
+                            } else {
+                                aliases = java.util.List.of();
                             }
-                            loadedChannels.put(key, innerMap);
+                            String uiName = inner.get("uiName") instanceof String s ? s : display;
+                            loadedChannels.put(key, new Channel(display, color, aliases, uiName));
                         }
                     }
                 }
@@ -47,8 +54,7 @@ public class ChatConfig {
                 Object hudX = config.get("hudX");
                 Object hudY = config.get("hudY");
                 Object align = config.get("textAlign");
-                Object fx = config.get("hudXFrac");
-                Object fy = config.get("hudYFrac");
+                // Removed fractional HUD positions hudXFrac/hudYFrac (unused)
                 Object anchorX = config.get("hudAnchorX");
                 Object anchorY = config.get("hudAnchorY");
                 Object offX = config.get("hudOffsetX");
@@ -56,8 +62,6 @@ public class ChatConfig {
                 Object scale = config.get("hudScale");
                 if (hudX instanceof Number nX) StoneworksChatClient.hudPosX = nX.intValue();
                 if (hudY instanceof Number nY) StoneworksChatClient.hudPosY = nY.intValue();
-                if (fx instanceof Number nx) StoneworksChatClient.hudPosXFrac = nx.floatValue();
-                if (fy instanceof Number ny) StoneworksChatClient.hudPosYFrac = ny.floatValue();
                 if (anchorX instanceof String ax) {
                     try { StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.valueOf(ax); } catch (Exception ignored) { StoneworksChatClient.hudAnchorX = null; }
                 } else {
@@ -101,7 +105,18 @@ public class ChatConfig {
     public static void save() {
         Map<String, Object> config = new HashMap<>();
         config.put("currentChannel", StoneworksChatClient.currentChannel);
-        config.put("channels", StoneworksChatClient.channels);
+        // Serialize channels as a simple map structure for compatibility
+        Map<String, Object> channelsOut = new HashMap<>();
+        for (Map.Entry<String, Channel> e : StoneworksChatClient.channels.entrySet()) {
+            Map<String, Object> m = new HashMap<>();
+            Channel ch = e.getValue();
+            if (ch.display() != null) m.put("display", ch.display());
+            if (ch.color() != null) m.put("color", ch.color());
+            if (ch.aliases() != null) m.put("aliases", ch.aliases());
+            if (ch.uiName() != null) m.put("uiName", ch.uiName());
+            channelsOut.put(e.getKey(), m);
+        }
+        config.put("channels", channelsOut);
         config.put("hudX", StoneworksChatClient.hudPosX);
         config.put("hudY", StoneworksChatClient.hudPosY);
     String align = switch (StoneworksChatClient.hudTextAlign) {
@@ -111,8 +126,7 @@ public class ChatConfig {
         };
     config.put("textAlign", align);
     config.put("hudVisible", StoneworksChatClient.hudVisible);
-    if (StoneworksChatClient.hudPosXFrac >= 0f) config.put("hudXFrac", StoneworksChatClient.hudPosXFrac);
-    if (StoneworksChatClient.hudPosYFrac >= 0f) config.put("hudYFrac", StoneworksChatClient.hudPosYFrac);
+    // hudXFrac/hudYFrac removed
     if (StoneworksChatClient.hudAnchorX != null) config.put("hudAnchorX", StoneworksChatClient.hudAnchorX.name());
     if (StoneworksChatClient.hudAnchorY != null) config.put("hudAnchorY", StoneworksChatClient.hudAnchorY.name());
     config.put("hudOffsetX", StoneworksChatClient.hudOffsetX);
@@ -139,11 +153,7 @@ public class ChatConfig {
 
     private static void addDefaultChannel(String key, String display, String color, String[] aliases) {
         if (!StoneworksChatClient.channels.containsKey(key)) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("display", display);
-            map.put("color", color);
-            map.put("aliases", aliases);
-            StoneworksChatClient.channels.put(key, map);
+            StoneworksChatClient.channels.put(key, new Channel(display, color, java.util.Arrays.asList(aliases), display));
         }
     }
 } 

@@ -1,6 +1,5 @@
 package com.duperknight.stoneworksChat.client;
 
-import java.util.Map;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.client.render.RenderLayer;
@@ -69,8 +68,8 @@ public class HudConfigScreen extends Screen {
         int spacing = 6;
 
         try {
-            Map<String, Object> channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
-            String display = channelInfo != null ? (String) channelInfo.get("display") : "";
+            Channel channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
+            String display = channelInfo != null ? channelInfo.display() : "";
             Text previewText = Text.translatable("stoneworks_chat.chat_prefix", (display != null ? display : ""));
             int paddingX = 4;
             int paddingY = 3;
@@ -185,8 +184,7 @@ public class HudConfigScreen extends Screen {
         // Store raw alignment coordinate (for fallback if anchors cleared)
         StoneworksChatClient.hudPosX = currentX;
         StoneworksChatClient.hudPosY = currentY;
-        StoneworksChatClient.hudPosXFrac = -1f;
-        StoneworksChatClient.hudPosYFrac = -1f;
+        // fractional positions removed
         ChatConfig.save();
         close();
     }).dimensions(centerX - btnW / 2, this.height - (btnH + 12), btnW, btnH).build());
@@ -264,10 +262,10 @@ public class HudConfigScreen extends Screen {
         drawContext.getMatrices().translate(0.0F, 0.0F, 1000.0F);
         drawContext.drawCenteredTextWithShadow(textRenderer, this.title, this.width / 2, 12, 0xFFFFFF);
 
-        Map<String, Object> channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
+        Channel channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
         if (channelInfo != null) {
-            String display = (String) channelInfo.get("display");
-            String color = (String) channelInfo.get("color");
+            String display = channelInfo.display();
+            String color = channelInfo.color();
             Text text = Text.translatable("stoneworks_chat.chat_prefix", (display != null ? display : ""));
             var tr = MinecraftClient.getInstance().textRenderer;
             int paddingX = 4;
@@ -315,9 +313,9 @@ public class HudConfigScreen extends Screen {
             drawContext.fill(leftX, currentY, leftX + 1, currentY + scaledBgH, borderColor);
             drawContext.fill(leftX + scaledBgW - 1, currentY, leftX + scaledBgW, currentY + scaledBgH, borderColor);
             int anchorXpx = switch (currentAlign) {
-                case LEFT_TO_RIGHT -> leftX;
-                case CENTER -> leftX + (scaledBgW / 2);
-                case RIGHT_TO_LEFT -> leftX + scaledBgW;
+                case LEFT_TO_RIGHT -> leftX;                     // left edge
+                case CENTER -> leftX + (scaledBgW / 2);          // center line
+                case RIGHT_TO_LEFT -> leftX + scaledBgW - 1;     // right edge pixel
             };
             int markerTop = Math.max(0, currentY - 4);
             drawContext.fill(anchorXpx, markerTop, anchorXpx + 1, currentY, 0xFF80C0FF);

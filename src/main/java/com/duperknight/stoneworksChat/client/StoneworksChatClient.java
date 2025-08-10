@@ -22,14 +22,13 @@ public class StoneworksChatClient implements ClientModInitializer {
 
     public static String currentChannel = "public";
     public static String pendingChannel = null;
-    public static Map<String, Map<String, Object>> channels = new HashMap<>();
+    public static Map<String, Channel> channels = new HashMap<>();
 
     public static boolean modTriggeredChannelsList = false;
 
     private static boolean channelGuiWasOpen = false;
     private static long lastGuiCloseTime = 0;
     private static final long GUI_CLOSE_DELAY = 10;
-    private static boolean guiTriggeredUpdate = false;
     private static boolean delayedCommandScheduled = false;
 
     
@@ -43,8 +42,7 @@ public class StoneworksChatClient implements ClientModInitializer {
     public static final float HUD_MIN_SCALE = 0.75f;
     public static final float HUD_MAX_SCALE = 4.0f;
     
-    public static float hudPosXFrac = -1f;
-    public static float hudPosYFrac = -1f;
+    // Removed fractional HUD position fields as they were unused
 
     
     public enum AnchorX { LEFT, CENTER, RIGHT }
@@ -65,7 +63,6 @@ public class StoneworksChatClient implements ClientModInitializer {
         ChatConfig.load();
         ChatCommandListener.register();
         ChatConfirmationListener.register();
-        ChannelGuiListener.register();
         HudOverlayRenderer.register();
 
         
@@ -105,7 +102,6 @@ public class StoneworksChatClient implements ClientModInitializer {
 
             if (isChannelGui && !channelGuiWasOpen) {
                 channelGuiWasOpen = true;
-                guiTriggeredUpdate = false;
             }
 
             else if (!isChannelGui && channelGuiWasOpen) {
@@ -117,13 +113,10 @@ public class StoneworksChatClient implements ClientModInitializer {
             else if (!isChannelGui && !channelGuiWasOpen && lastGuiCloseTime > 0) {
                 long timeSinceClose = System.currentTimeMillis() - lastGuiCloseTime;
 
-                if (timeSinceClose >= GUI_CLOSE_DELAY && !guiTriggeredUpdate && !delayedCommandScheduled) {
+                if (timeSinceClose >= GUI_CLOSE_DELAY && !delayedCommandScheduled) {
                     if (ChatConfirmationListener.requestChannelListUpdate()) {
                         delayedCommandScheduled = true;
                     }
-                    lastGuiCloseTime = 0;
-                }
-                else if (guiTriggeredUpdate) {
                     lastGuiCloseTime = 0;
                 }
             }
@@ -135,9 +128,7 @@ public class StoneworksChatClient implements ClientModInitializer {
         });
     }
 
-    public static void markGuiUpdateTriggered() {
-        guiTriggeredUpdate = true;
-    }
+    // Removed markGuiUpdateTriggered() as it was unused
     public static void sendCommand(String command) {
         net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
         if (client != null && client.player != null) {
