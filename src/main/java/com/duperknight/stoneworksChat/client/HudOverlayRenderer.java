@@ -6,7 +6,6 @@ import net.minecraft.text.Text;
 
 public class HudOverlayRenderer {
     public static void register() {
-        // TODO: For 1.21.6 this will no longer work
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             var mc = MinecraftClient.getInstance();
             if (mc != null && mc.currentScreen instanceof HudConfigScreen) {
@@ -24,7 +23,6 @@ public class HudOverlayRenderer {
                 int screenW = drawContext.getScaledWindowWidth();
                 int screenH = drawContext.getScaledWindowHeight();
 
-                // hudPosX used directly later (alignLine); no separate xAnchor needed
                 int y = StoneworksChatClient.hudPosY;
                 int colorCode = getColorCode(color);
                 var tr = MinecraftClient.getInstance().textRenderer;
@@ -42,16 +40,19 @@ public class HudOverlayRenderer {
                 boolean center = (StoneworksChatClient.hudTextAlign == StoneworksChatClient.TextAlign.CENTER);
                 int leftX;
                 if (StoneworksChatClient.hudOffsetX >= 0) {
-                    // Reconstruct left edge with float math mirroring HudConfigScreen
                     float leftXf;
-                    switch (StoneworksChatClient.hudAnchorX) {
-                        case LEFT -> leftXf = StoneworksChatClient.hudOffsetX;
-                        case CENTER -> {
-                            float centerLine = (screenW / 2f) + StoneworksChatClient.hudOffsetX;
-                            leftXf = centerLine - (scaledBgW / 2f);
+                    if (StoneworksChatClient.hudAnchorX == null) {
+                        leftXf = StoneworksChatClient.hudPosX;
+                    } else {
+                        switch (StoneworksChatClient.hudAnchorX) {
+                            case LEFT -> leftXf = StoneworksChatClient.hudOffsetX;
+                            case CENTER -> {
+                                float centerLine = (screenW / 2f) + StoneworksChatClient.hudOffsetX;
+                                leftXf = centerLine - (scaledBgW / 2f);
+                            }
+                            case RIGHT -> leftXf = (screenW - StoneworksChatClient.hudOffsetX) - scaledBgW;
+                            default -> leftXf = StoneworksChatClient.hudPosX;
                         }
-                        case RIGHT -> leftXf = (screenW - StoneworksChatClient.hudOffsetX) - scaledBgW;
-                        default -> leftXf = StoneworksChatClient.hudPosX;
                     }
                     boolean centerAnchorX = StoneworksChatClient.hudAnchorX == StoneworksChatClient.AnchorX.CENTER;
                     leftX = centerAnchorX ? (int)Math.floor(leftXf + 0.0001f) : Math.round(leftXf);
@@ -73,14 +74,18 @@ public class HudOverlayRenderer {
 
                 if (StoneworksChatClient.hudOffsetY >= 0) {
                     float topYf;
-                    switch (StoneworksChatClient.hudAnchorY) {
-                        case TOP -> topYf = StoneworksChatClient.hudOffsetY;
-                        case CENTER -> {
-                            float centerLineY = (screenH / 2f) + StoneworksChatClient.hudOffsetY;
-                            topYf = centerLineY - (scaledBgH / 2f);
+                    if (StoneworksChatClient.hudAnchorY == null) {
+                        topYf = StoneworksChatClient.hudPosY;
+                    } else {
+                        switch (StoneworksChatClient.hudAnchorY) {
+                            case TOP -> topYf = StoneworksChatClient.hudOffsetY;
+                            case CENTER -> {
+                                float centerLineY = (screenH / 2f) + StoneworksChatClient.hudOffsetY;
+                                topYf = centerLineY - (scaledBgH / 2f);
+                            }
+                            case BOTTOM -> topYf = (screenH - StoneworksChatClient.hudOffsetY) - scaledBgH;
+                            default -> topYf = StoneworksChatClient.hudPosY;
                         }
-                        case BOTTOM -> topYf = (screenH - StoneworksChatClient.hudOffsetY) - scaledBgH;
-                        default -> topYf = StoneworksChatClient.hudPosY;
                     }
                     boolean centerAnchorY = StoneworksChatClient.hudAnchorY == StoneworksChatClient.AnchorY.CENTER;
                     y = centerAnchorY ? (int)Math.floor(topYf + 0.0001f) : Math.round(topYf);

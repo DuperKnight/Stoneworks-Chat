@@ -1,15 +1,22 @@
 package com.duperknight.stoneworksChat.client;
 
+
+import com.duperknight.stoneworksChat.client.config.ChatConfig;
+
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import com.duperknight.stoneworksChat.client.config.ChatConfig;
+
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.option.KeyBinding;
+
 import java.util.HashMap;
 import java.util.Map;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.option.KeyBinding;
+
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +49,6 @@ public class StoneworksChatClient implements ClientModInitializer {
     public static final float HUD_MIN_SCALE = 0.75f;
     public static final float HUD_MAX_SCALE = 4.0f;
     
-    // Removed fractional HUD position fields as they were unused
 
     
     public enum AnchorX { LEFT, CENTER, RIGHT }
@@ -96,7 +102,7 @@ public class StoneworksChatClient implements ClientModInitializer {
                 ChatConfig.save();
             }
 
-            net.minecraft.client.gui.screen.Screen current = client.currentScreen;
+            Screen current = client.currentScreen;
             boolean isChannelGui = current instanceof GenericContainerScreen &&
                                  current.getTitle().getString().equals("Channels");
 
@@ -128,9 +134,8 @@ public class StoneworksChatClient implements ClientModInitializer {
         });
     }
 
-    // Removed markGuiUpdateTriggered() as it was unused
     public static void sendCommand(String command) {
-        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        MinecraftClient client = MinecraftClient.getInstance();
         if (client != null && client.player != null) {
             var player = client.player;
             var handler = player != null ? player.networkHandler : null;

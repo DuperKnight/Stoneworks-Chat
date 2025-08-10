@@ -14,8 +14,10 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
 public class ChatConfirmationListener {
     private static final Pattern CONFIRM_PATTERN =
-            Pattern.compile("You are now talking on ([A-Za-z0-9_ ]+)!",
-                            Pattern.CASE_INSENSITIVE);
+            Pattern.compile(
+                "you\\s+are\\s+now\\s+talking\\s+on\\s+(.+?)(?:\\s*[!.])?$",
+                Pattern.CASE_INSENSITIVE
+            );
 
     private static boolean collectingChannels = false;
     private static final List<String> channelStatuses = new ArrayList<>();
@@ -252,11 +254,9 @@ public class ChatConfirmationListener {
         String best = findBestKeyForRaw(rawName);
         if (best != null) return best;
         String key = rawName;
-        StoneworksChatClient.channels.put(key, new Channel(rawName, "white", java.util.List.of(), rawName));
+        StoneworksChatClient.channels.put(key, new Channel(rawName, "white", List.of(), rawName));
         return key;
     }
-
-    // removed unused resolveChannelKeyNoCreate
 
     private static void beginStatusMute() {
         muteStatusLinesActive = true;

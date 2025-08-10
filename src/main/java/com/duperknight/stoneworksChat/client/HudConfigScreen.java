@@ -1,15 +1,16 @@
 package com.duperknight.stoneworksChat.client;
 
 
-import net.minecraft.util.Identifier;
-import net.minecraft.client.render.RenderLayer;
-
 import com.duperknight.stoneworksChat.client.config.ChatConfig;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.Identifier;
 import net.minecraft.text.Text;
 
 public class HudConfigScreen extends Screen {
@@ -82,7 +83,6 @@ public class HudConfigScreen extends Screen {
 
             if (StoneworksChatClient.hudAnchorX != null && StoneworksChatClient.hudAnchorY != null &&
                 StoneworksChatClient.hudOffsetX >= 0 && StoneworksChatClient.hudOffsetY >= 0) {
-                // Reconstruct left/top from anchor + offsets, then derive alignment coordinate.
                 float scale = StoneworksChatClient.hudScale;
                 int scaledBgW = Math.round(bgW * scale);
                 int scaledBgH = Math.round(bgH * scale);
@@ -109,7 +109,6 @@ public class HudConfigScreen extends Screen {
                     case BOTTOM -> topYf = (screenH - StoneworksChatClient.hudOffsetY) - scaledBgH;
                     default -> topYf = StoneworksChatClient.hudPosY;
                 }
-                // Alignment coordinate (currentX) derived from float left edge; use floor for center anchor to avoid half-pixel upward drift
                 boolean centerAnchorX = StoneworksChatClient.hudAnchorX == StoneworksChatClient.AnchorX.CENTER;
                 switch (StoneworksChatClient.hudTextAlign) {
                     case LEFT_TO_RIGHT -> this.currentX = centerAnchorX ? (int)Math.floor(leftXf + 0.0001f) : Math.round(leftXf);
@@ -154,8 +153,6 @@ public class HudConfigScreen extends Screen {
             ? StoneworksChatClient.AnchorX.CENTER
             : (distLeft <= distRight ? StoneworksChatClient.AnchorX.LEFT : StoneworksChatClient.AnchorX.RIGHT);
 
-        // Compute and store offset relative to chosen anchor reference edge/line
-        // Compute offsets using float math then round once for storage
         switch (StoneworksChatClient.hudAnchorX) {
             case LEFT -> StoneworksChatClient.hudOffsetX = Math.round(leftX);
             case CENTER -> {
@@ -181,10 +178,9 @@ public class HudConfigScreen extends Screen {
             case BOTTOM -> StoneworksChatClient.hudOffsetY = Math.round(screenH - (topY + boxH));
         }
 
-        // Store raw alignment coordinate (for fallback if anchors cleared)
         StoneworksChatClient.hudPosX = currentX;
         StoneworksChatClient.hudPosY = currentY;
-        // fractional positions removed
+        
         ChatConfig.save();
         close();
     }).dimensions(centerX - btnW / 2, this.height - (btnH + 12), btnW, btnH).build());
@@ -375,14 +371,14 @@ public class HudConfigScreen extends Screen {
             var res = rm.getResource(ARROWS_TEX);
             res.ifPresent(r -> {
                 try (var is = r.getInputStream()) {
-                    var img = net.minecraft.client.texture.NativeImage.read(is);
+                    var img = NativeImage.read(is);
                     arrowsWCache = img.getWidth(); arrowsHCache = img.getHeight();
                 } catch (Exception ignored) {}
             });
             var res2 = rm.getResource(SHIFT_TEX);
             res2.ifPresent(r -> {
                 try (var is = r.getInputStream()) {
-                    var img = net.minecraft.client.texture.NativeImage.read(is);
+                    var img = NativeImage.read(is);
                     shiftWCache = img.getWidth(); shiftHCache = img.getHeight();
                 } catch (Exception ignored) {}
             });
@@ -730,7 +726,7 @@ public class HudConfigScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (showTutorialPopup) {
-            if (keyCode == net.minecraft.client.util.InputUtil.GLFW_KEY_ESCAPE) {
+            if (keyCode == InputUtil.GLFW_KEY_ESCAPE) {
                 showTutorialPopup = false;
                 hideTutorialButtons();
                 return true;
@@ -740,17 +736,17 @@ public class HudConfigScreen extends Screen {
         int step = hasShiftDown() ? 5 : 1;
         boolean handled = false;
 
-    if (keyCode == net.minecraft.client.util.InputUtil.GLFW_KEY_LEFT) {
+    if (keyCode == InputUtil.GLFW_KEY_LEFT) {
             currentX -= step;
             handled = true;
-    } else if (keyCode == net.minecraft.client.util.InputUtil.GLFW_KEY_RIGHT) {
+    } else if (keyCode == InputUtil.GLFW_KEY_RIGHT) {
             currentX += step;
             handled = true;
         }
-    if (keyCode == net.minecraft.client.util.InputUtil.GLFW_KEY_UP) {
+    if (keyCode == InputUtil.GLFW_KEY_UP) {
             currentY -= step;
             handled = true;
-    } else if (keyCode == net.minecraft.client.util.InputUtil.GLFW_KEY_DOWN) {
+    } else if (keyCode == InputUtil.GLFW_KEY_DOWN) {
             currentY += step;
             handled = true;
         }
