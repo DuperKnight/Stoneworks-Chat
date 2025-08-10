@@ -83,23 +83,48 @@ public class HudConfigScreen extends Screen {
 
             if (StoneworksChatClient.hudAnchorX != null && StoneworksChatClient.hudAnchorY != null &&
                 StoneworksChatClient.hudOffsetX >= 0 && StoneworksChatClient.hudOffsetY >= 0) {
-                int anchorCoordX;
+                // Reconstruct left/top from anchor + offsets, then derive alignment coordinate.
+                float scale = StoneworksChatClient.hudScale;
+                int scaledBgW = Math.round(bgW * scale);
+                int scaledBgH = Math.round(bgH * scale);
+                int screenW = this.width;
+                int screenH = this.height;
+
+                float leftXf; // left edge (float for symmetric rounding)
                 switch (StoneworksChatClient.hudAnchorX) {
-                    case RIGHT -> anchorCoordX = this.width - StoneworksChatClient.hudOffsetX;
-                    case CENTER -> anchorCoordX = (this.width / 2) + StoneworksChatClient.hudOffsetX;
-                    default -> anchorCoordX = StoneworksChatClient.hudOffsetX;
+                    case LEFT -> leftXf = StoneworksChatClient.hudOffsetX;
+                    case CENTER -> {
+                        float centerLine = (screenW / 2f) + StoneworksChatClient.hudOffsetX;
+                        leftXf = centerLine - (scaledBgW / 2f);
+                    }
+                    case RIGHT -> leftXf = (screenW - StoneworksChatClient.hudOffsetX) - scaledBgW;
+                    default -> leftXf = StoneworksChatClient.hudPosX;
                 }
-
-                int topY;
+                float topYf;
                 switch (StoneworksChatClient.hudAnchorY) {
-                    case TOP -> topY = StoneworksChatClient.hudOffsetY;
-                    case CENTER -> topY = (this.height / 2) + StoneworksChatClient.hudOffsetY - bgH / 2;
-                    case BOTTOM -> topY = this.height - StoneworksChatClient.hudOffsetY - bgH;
-                    default -> topY = StoneworksChatClient.hudPosY;
+                    case TOP -> topYf = StoneworksChatClient.hudOffsetY;
+                    case CENTER -> {
+                        float centerLineY = (screenH / 2f) + StoneworksChatClient.hudOffsetY;
+                        topYf = centerLineY - (scaledBgH / 2f);
+                    }
+                    case BOTTOM -> topYf = (screenH - StoneworksChatClient.hudOffsetY) - scaledBgH;
+                    default -> topYf = StoneworksChatClient.hudPosY;
                 }
-
-                this.currentX = anchorCoordX;
-                this.currentY = topY;
+                // Alignment coordinate (currentX) derived from float left edge; use floor for center anchor to avoid half-pixel upward drift
+                boolean centerAnchorX = StoneworksChatClient.hudAnchorX == StoneworksChatClient.AnchorX.CENTER;
+                switch (StoneworksChatClient.hudTextAlign) {
+                    case LEFT_TO_RIGHT -> this.currentX = centerAnchorX ? (int)Math.floor(leftXf + 0.0001f) : Math.round(leftXf);
+                    case CENTER -> {
+                        float mid = leftXf + scaledBgW / 2f;
+                        this.currentX = centerAnchorX ? (int)Math.floor(mid + 0.0001f) : Math.round(mid);
+                    }
+                    case RIGHT_TO_LEFT -> {
+                        float right = leftXf + scaledBgW;
+                        this.currentX = centerAnchorX ? (int)Math.floor(right + 0.0001f) : Math.round(right);
+                    }
+                }
+                boolean centerAnchorY = StoneworksChatClient.hudAnchorY == StoneworksChatClient.AnchorY.CENTER;
+                this.currentY = centerAnchorY ? (int)Math.floor(topYf + 0.0001f) : Math.round(topYf);
             }
         } catch (Exception ignored) {
         }
@@ -110,19 +135,58 @@ public class HudConfigScreen extends Screen {
         }).dimensions(centerX - btnW / 2, this.height - (btnH * 2 + spacing + 12), btnW, btnH).build());
 
     doneBtn = addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> {
-        // Preserve alignment behavior but store raw alignment coordinate & top-left reference
         StoneworksChatClient.hudTextAlign = currentAlign;
 
-        // Store currentX/currentY directly; disable anchor offsets to avoid scale drift
-    StoneworksChatClient.hudPosX = currentX; // alignment line (left / center / right edge depending on alignment)
-    StoneworksChatClient.hudPosY = currentY; // top edge
-    StoneworksChatClient.hudPosXFrac = -1f;
-    StoneworksChatClient.hudPosYFrac = -1f;
-    StoneworksChatClient.hudOffsetX = -1; // signal: use raw pos fields
-    StoneworksChatClient.hudOffsetY = -1;
-    // Null anchors so re-opening config uses raw stored coords
-    StoneworksChatClient.hudAnchorX = null;
-    StoneworksChatClient.hudAnchorY = null;
+        int screenW = this.width;
+        int screenH = this.height;
+        int boxW = Math.round(previewW * StoneworksChatClient.hudScale);
+        int boxH = Math.round(previewH * StoneworksChatClient.hudScale);
+        int leftX = switch (currentAlign) {
+            case RIGHT_TO_LEFT -> currentX - boxW;
+            case CENTER -> currentX - boxW / 2;
+            case LEFT_TO_RIGHT -> currentX;
+        };
+
+        // Decide anchor X based on proximity of left edge, center line, right edge
+        int distLeft = leftX;
+        int distCenter = Math.abs((leftX + boxW / 2) - (screenW / 2));
+        int distRight = screenW - (leftX + boxW);
+        StoneworksChatClient.hudAnchorX = (distCenter <= distLeft && distCenter <= distRight)
+            ? StoneworksChatClient.AnchorX.CENTER
+            : (distLeft <= distRight ? StoneworksChatClient.AnchorX.LEFT : StoneworksChatClient.AnchorX.RIGHT);
+
+        // Compute and store offset relative to chosen anchor reference edge/line
+        // Compute offsets using float math then round once for storage
+        switch (StoneworksChatClient.hudAnchorX) {
+            case LEFT -> StoneworksChatClient.hudOffsetX = Math.round(leftX);
+            case CENTER -> {
+                float centerOffset = (leftX + boxW / 2f) - (screenW / 2f);
+                StoneworksChatClient.hudOffsetX = Math.round(centerOffset);
+            }
+            case RIGHT -> StoneworksChatClient.hudOffsetX = Math.round(screenW - (leftX + boxW));
+        }
+
+        int topY = currentY;
+        int distTop = topY;
+        int distMid = Math.abs((topY + boxH / 2) - (screenH / 2));
+        int distBot = screenH - (topY + boxH);
+        StoneworksChatClient.hudAnchorY = (distMid <= distTop && distMid <= distBot)
+            ? StoneworksChatClient.AnchorY.CENTER
+            : (distTop <= distBot ? StoneworksChatClient.AnchorY.TOP : StoneworksChatClient.AnchorY.BOTTOM);
+        switch (StoneworksChatClient.hudAnchorY) {
+            case TOP -> StoneworksChatClient.hudOffsetY = Math.round(topY);
+            case CENTER -> {
+                float centerOffsetY = (topY + boxH / 2f) - (screenH / 2f);
+                StoneworksChatClient.hudOffsetY = Math.round(centerOffsetY);
+            }
+            case BOTTOM -> StoneworksChatClient.hudOffsetY = Math.round(screenH - (topY + boxH));
+        }
+
+        // Store raw alignment coordinate (for fallback if anchors cleared)
+        StoneworksChatClient.hudPosX = currentX;
+        StoneworksChatClient.hudPosY = currentY;
+        StoneworksChatClient.hudPosXFrac = -1f;
+        StoneworksChatClient.hudPosYFrac = -1f;
         ChatConfig.save();
         close();
     }).dimensions(centerX - btnW / 2, this.height - (btnH + 12), btnW, btnH).build());

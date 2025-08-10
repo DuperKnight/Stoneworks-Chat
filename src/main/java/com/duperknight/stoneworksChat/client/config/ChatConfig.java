@@ -59,10 +59,14 @@ public class ChatConfig {
                 if (fx instanceof Number nx) StoneworksChatClient.hudPosXFrac = nx.floatValue();
                 if (fy instanceof Number ny) StoneworksChatClient.hudPosYFrac = ny.floatValue();
                 if (anchorX instanceof String ax) {
-                    try { StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.valueOf(ax); } catch (Exception ignored) {}
+                    try { StoneworksChatClient.hudAnchorX = StoneworksChatClient.AnchorX.valueOf(ax); } catch (Exception ignored) { StoneworksChatClient.hudAnchorX = null; }
+                } else {
+                    StoneworksChatClient.hudAnchorX = null;
                 }
                 if (anchorY instanceof String ay) {
-                    try { StoneworksChatClient.hudAnchorY = StoneworksChatClient.AnchorY.valueOf(ay); } catch (Exception ignored) {}
+                    try { StoneworksChatClient.hudAnchorY = StoneworksChatClient.AnchorY.valueOf(ay); } catch (Exception ignored) { StoneworksChatClient.hudAnchorY = null; }
+                } else {
+                    StoneworksChatClient.hudAnchorY = null;
                 }
                 if (offX instanceof Number ox) StoneworksChatClient.hudOffsetX = ox.intValue();
                 if (offY instanceof Number oy) StoneworksChatClient.hudOffsetY = oy.intValue();
@@ -109,12 +113,8 @@ public class ChatConfig {
     config.put("hudVisible", StoneworksChatClient.hudVisible);
     if (StoneworksChatClient.hudPosXFrac >= 0f) config.put("hudXFrac", StoneworksChatClient.hudPosXFrac);
     if (StoneworksChatClient.hudPosYFrac >= 0f) config.put("hudYFrac", StoneworksChatClient.hudPosYFrac);
-        if (StoneworksChatClient.hudAnchorX != null) {
-            config.put("hudAnchorX", StoneworksChatClient.hudAnchorX.name());
-        }
-        if (StoneworksChatClient.hudAnchorY != null) {
-            config.put("hudAnchorY", StoneworksChatClient.hudAnchorY.name());
-        }
+    if (StoneworksChatClient.hudAnchorX != null) config.put("hudAnchorX", StoneworksChatClient.hudAnchorX.name());
+    if (StoneworksChatClient.hudAnchorY != null) config.put("hudAnchorY", StoneworksChatClient.hudAnchorY.name());
     config.put("hudOffsetX", StoneworksChatClient.hudOffsetX);
     config.put("hudOffsetY", StoneworksChatClient.hudOffsetY);
     config.put("showHudTutorial", StoneworksChatClient.showHudTutorial);
