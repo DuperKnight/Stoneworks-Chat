@@ -8,15 +8,15 @@ public class HudOverlayRenderer {
     public static void register() {
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             var mc = MinecraftClient.getInstance();
-            if (mc != null && mc.currentScreen instanceof HudConfigScreen) {
+            if (mc == null || 
+                mc.currentScreen instanceof HudConfigScreen || 
+                (mc.options != null && mc.options.hudHidden) || 
+                !StoneworksChatClient.hudVisible) {
                 return;
-            }
-            if (!StoneworksChatClient.hudVisible) {
-                return; // HUD hidden
             }
             Channel channelInfo = StoneworksChatClient.channels.get(StoneworksChatClient.currentChannel);
             if (channelInfo != null) {
-                String display = channelInfo.display(); // kept for translatable prefix
+                String display = channelInfo.display();
                 String color = channelInfo.color();
                 Text text = Text.translatable("stoneworks_chat.chat_prefix", (display != null ? display : ""));
 

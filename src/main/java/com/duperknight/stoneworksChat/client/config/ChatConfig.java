@@ -175,13 +175,45 @@ public class ChatConfig {
         addDefaultChannel("LocalChat", "Local", "green", new String[]{"/l", "/local"});
         addDefaultChannel("TradeChat", "Trade", "cyan", new String[]{"/tradechat", "/tc"});
         addDefaultChannel("RPChat", "Roleplay", "light_red", new String[]{"/rpc"});
-        //addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"});
-        //addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"});
+        addDefaultChannel("StaffChat2", "Staff", "yellow", new String[]{"/staffc"});
+        addDefaultChannel("AdminChat", "Admin", "red", new String[]{"/adminc"});
     }
 
     private static void addDefaultChannel(String key, String display, String color, String[] aliases) {
         if (!StoneworksChatClient.channels.containsKey(key)) {
             StoneworksChatClient.channels.put(key, new Channel(display, color, Arrays.asList(aliases), display));
+        }
+    }
+
+    public static boolean reset() {
+        try {
+            if (CONFIG_FILE.exists() && !CONFIG_FILE.delete()) {
+                LOGGER.warn("Could not delete existing config file: {}", CONFIG_FILE.getAbsolutePath());
+            }
+
+            StoneworksChatClient.currentChannel = "public";
+            StoneworksChatClient.pendingChannel = null;
+            StoneworksChatClient.channels = new HashMap<>();
+
+            StoneworksChatClient.hudPosX = 10;
+            StoneworksChatClient.hudPosY = 10;
+            StoneworksChatClient.hudTextAlign = StoneworksChatClient.TextAlign.LEFT_TO_RIGHT;
+            StoneworksChatClient.hudScale = 1.0f;
+            StoneworksChatClient.hudAnchorX = null;
+            StoneworksChatClient.hudAnchorY = null;
+            StoneworksChatClient.hudOffsetX = -1;
+            StoneworksChatClient.hudOffsetY = -1;
+            StoneworksChatClient.hudVisible = true;
+            StoneworksChatClient.showHudTutorial = true;
+
+            ensureDefaultChannels();
+
+            save();
+            LOGGER.info("Config reset to defaults and regenerated at {}", CONFIG_FILE.getAbsolutePath());
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to reset config {}", CONFIG_FILE.getAbsolutePath(), e);
+            return false;
         }
     }
 } 

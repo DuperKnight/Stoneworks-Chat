@@ -69,6 +69,7 @@ public class StoneworksChatClient implements ClientModInitializer {
         ChatConfig.load();
         ChatCommandListener.register();
         ChatConfirmationListener.register();
+        ClientCommands.register();
         HudOverlayRenderer.register();
 
         
