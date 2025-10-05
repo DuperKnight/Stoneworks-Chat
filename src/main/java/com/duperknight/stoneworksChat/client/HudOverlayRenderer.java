@@ -1,16 +1,17 @@
 package com.duperknight.stoneworksChat.client;
 
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback; // still used though deprecated
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 
 public class HudOverlayRenderer {
     public static void register() {
+        // Keep registration; update matrix operations to new API
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             var mc = MinecraftClient.getInstance();
-            if (mc == null || 
-                mc.currentScreen instanceof HudConfigScreen || 
-                (mc.options != null && mc.options.hudHidden) || 
+            if (mc == null ||
+                mc.currentScreen instanceof HudConfigScreen ||
+                (mc.options != null && mc.options.hudHidden) ||
                 !StoneworksChatClient.hudVisible) {
                 return;
             }
@@ -25,6 +26,8 @@ public class HudOverlayRenderer {
 
                 int y = StoneworksChatClient.hudPosY;
                 int colorCode = getColorCode(color);
+                // Ensure alpha (1.21.8 drawText now respects alpha fully; missing alpha meant invisible text)
+                if ((colorCode & 0xFF000000) == 0) colorCode |= 0xFF000000;
                 var tr = MinecraftClient.getInstance().textRenderer;
                 int paddingX = 4;
                 int paddingY = 3;
@@ -59,16 +62,10 @@ public class HudOverlayRenderer {
                 } else {
                     int alignLine = StoneworksChatClient.hudPosX;
                     switch (StoneworksChatClient.hudTextAlign) {
-                        case LEFT_TO_RIGHT:
-                            leftX = alignLine;
-                            break;
-                        case CENTER:
-                            leftX = alignLine - (scaledBgW / 2);
-                            break;
-                        case RIGHT_TO_LEFT:
-                        default:
-                            leftX = alignLine - scaledBgW;
-                            break;
+                        case LEFT_TO_RIGHT -> leftX = alignLine;
+                        case CENTER -> leftX = alignLine - (scaledBgW / 2);
+                        case RIGHT_TO_LEFT -> leftX = alignLine - scaledBgW;
+                        default -> leftX = alignLine; // fallback
                     }
                 }
 
@@ -92,7 +89,7 @@ public class HudOverlayRenderer {
                 } else {
                     y = StoneworksChatClient.hudPosY;
                 }
-        drawContext.fill(leftX, y, leftX + scaledBgW, y + scaledBgH, 0x80000000);
+                drawContext.fill(leftX, y, leftX + scaledBgW, y + scaledBgH, 0x80000000);
 
                 int textX = rtl
                     ? leftX + scaledBgW - Math.round(paddingX * scale) - Math.round(textW * scale)
@@ -100,11 +97,11 @@ public class HudOverlayRenderer {
                         ? leftX + Math.max(0, (scaledBgW - Math.round(textW * scale)) / 2)
                         : leftX + Math.round(paddingX * scale));
                 int textY = y + Math.round((scaledBgH - Math.round(textH * scale)) / 2f) + 1;
-                drawContext.getMatrices().push();
-                drawContext.getMatrices().translate(textX, textY, 0);
-                drawContext.getMatrices().scale(scale, scale, 1.0f);
+                drawContext.getMatrices().pushMatrix();
+                drawContext.getMatrices().translate((float) textX, (float) textY);
+                drawContext.getMatrices().scale(scale, scale);
                 drawContext.drawText(tr, text, 0, 0, colorCode, true);
-                drawContext.getMatrices().pop();
+                drawContext.getMatrices().popMatrix();
             }
         });
     }
